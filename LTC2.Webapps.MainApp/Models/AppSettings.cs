@@ -5,6 +5,7 @@ namespace LTC2.Webapps.MainApp.Models
     public class AppSettings
     {
         private string _tilesFolder;
+        private string _tempRoutesFolder;
         public string Name { get; set; }
 
         public string AllowedOrigins { get; set; }
@@ -27,5 +28,19 @@ namespace LTC2.Webapps.MainApp.Models
         public string DefaultListenUrls { get; set; }
 
         public bool IsStandAlone { get; set; }
+
+        public string TempRoutesFolder
+        {
+            get
+            {
+                return _tempRoutesFolder == null ? null : Environment.ExpandEnvironmentVariables(_tempRoutesFolder);
+            }
+            set
+            {
+                _tempRoutesFolder = value;
+            }
+        }
+
+
     }
 }

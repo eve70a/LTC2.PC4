@@ -1,6 +1,7 @@
 import { Ref } from 'vue';
 import { Visit } from '../../models/Visit';
 import { Track } from '../../models/Track';
+import { Routes } from '../../models/Routes';
 
 import { Map, View, Overlay } from 'ol';
 import { Tile } from 'ol/layer';
@@ -170,6 +171,7 @@ export class MapHelper {
     private _showYear: boolean;
     private _showLast: boolean;
     private _showTrack: boolean;
+    private _showRoute: boolean;
     private _showTimelapse: boolean;
 
     private _currentTrack: Track | undefined;
@@ -177,6 +179,8 @@ export class MapHelper {
 
     private _trackLayer: VectorTileLayer | undefined;
     private _lineTrackLayer: VectorLayer<VectorSource> | undefined;
+    private _routePlacesLayer: VectorTileLayer | undefined;
+    private _routeLineLayer: VectorLayer<VectorSource> | undefined;
 
     private _timelapseLayer: VectorTileLayer | undefined;
     private _linesTimelapseLayer: VectorLayer<VectorSource> | undefined;
@@ -208,6 +212,7 @@ export class MapHelper {
         this._showYear = false;
         this._showLast = false;
         this._showTrack = false;
+        this._showRoute = false;
         this._showTimelapse = false;
 
         this._placeholder = placeholder;
@@ -269,6 +274,7 @@ export class MapHelper {
 
         this.removeTrackLayers();
         this.removeTimelapseLayers();
+        this.removeRouteLayers();
 
         if (this._showYear) {
             this._map.addLayer(this._yearLayer);
@@ -281,7 +287,7 @@ export class MapHelper {
             this._map.removeLayer(this._lastRidePlacesLayer);
         }
 
-        this._showLast = false; 
+        this._showLast = false;
     }
 
     public showHideLastRide() {
@@ -289,6 +295,7 @@ export class MapHelper {
 
         this.removeTrackLayers();
         this.removeTimelapseLayers();
+        this.removeRouteLayers();
 
         if (this._showLast) {
             this._map.addLayer(this._lastRidePlacesLayer);
@@ -298,7 +305,7 @@ export class MapHelper {
             this._map.removeLayer(this._lastRidePlacesLayer);
         }
         
-        if (this._showYear && this._showLast) {
+        if (this._showLast && this._showYear) {
             this._map.removeLayer(this._yearLayer);
         }
 
@@ -310,6 +317,7 @@ export class MapHelper {
         
         this.removeTrackLayers();
         this.removeTimelapseLayers();
+        this.removeRouteLayers();
 
         if (this._showYear) {
             this._map.removeLayer(this._yearLayer);
@@ -341,6 +349,10 @@ export class MapHelper {
         return this._showTimelapse;
     }
 
+    public getShowRoute(): boolean {
+        return this._showRoute;
+    }
+
     public isTimelapseRunning(): boolean {
         return this._timelapseRunning;
     }
@@ -360,6 +372,20 @@ export class MapHelper {
             }
 
             this._showTrack = false;
+        }
+    }
+
+    private removeRouteLayers() {
+        if (this._showRoute) {
+            if (this._routeLineLayer) {
+                this._map.removeLayer(this._routeLineLayer);
+            }
+
+            if (this._routePlacesLayer) {
+                this._map.removeLayer(this._routePlacesLayer);
+            }
+
+            this._showRoute = false;
         }
     }
 
@@ -383,6 +409,7 @@ export class MapHelper {
     public showTrackForSelectedPlace(placeId: string, track: Track, doZoom = true) {
         this.removeTrackLayers();
         this.removeTimelapseLayers();
+        this.removeRouteLayers();
 
         this._currentTrack = track;
         this._currentPlace = placeId;
@@ -438,8 +465,110 @@ export class MapHelper {
         this._showTrack = true;
     }
 
+    public getPlaces(routes: Routes) : string[]{
+        let places : string[] = [];
+
+        if (routes && routes.routeCollection){
+            routes.routeCollection.forEach(r => {
+                if (r.places){
+                    places = [...places, ...r.places]
+                }
+            })
+        }
+
+        return places;
+    }
+
+    public hasPlaces(routes: Routes) : boolean{
+        return this.getPlaces(routes).length > 0;
+    }
+
+    public showRoute(routes: Routes, doZoom = true) {
+        let places = this.getPlaces(routes);
+        let hasTracks = false;
+
+        if (routes && routes.routeCollection){
+            routes.routeCollection.forEach(r => {
+                hasTracks = hasTracks || (r.coordinates && r.coordinates.length > 1);
+            })
+        }
+
+        const hasPlacesOnRoutes = places.length > 0;
+        const hasTracksOnRoutes = hasTracks;
+
+        if (hasPlacesOnRoutes || hasTracksOnRoutes) {
+            this.removeTrackLayers();
+            this.removeTimelapseLayers();
+            this.removeRouteLayers();
+    
+            //this._currentTrack = track;
+            //this._currentPlace = placeId;
+    
+            //const currentTrack = this._currentTrack;
+            //const currentPlace = this._currentPlace;
+            const mapStyleHelper = this._mapStyleHelper;
+    
+            //const placesOnRoutes = routes.routeCollection[0].places;
+            //const trackOnRoutes = routes.routeCollection[0].coordinates;
+            
+            this._routePlacesLayer = new VectorTileLayer({
+                source: this._vectorTileSource,
+                style: function (feature) {
+                    const featurePointer = feature.getProperties()["featurePointer"] as string
+                    const id = featurePointer.split(":")[0];
+    
+                    if (places.some(s => s === id)){
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack);
+                    }
+    
+                    return new Style();
+                }
+            });
+
+            const lineFeatures : Feature[] = [];
+        
+            routes.routeCollection.forEach(r => {
+                if (r.places){
+                    places = [...places, ...r.places]
+                }
+
+                if (r.coordinates && r.coordinates.length > 1) {
+                    const feature = new Feature({
+                        geometry: new LineString(r.coordinates).transform('EPSG:4326', 'EPSG:3857'), 
+                    });
+
+                    lineFeatures.push(feature);
+                }
+            });
+
+            this._routeLineLayer = new VectorLayer({
+                source : new VectorSource({
+                    features: lineFeatures
+                }),
+                style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine)
+            });
+    
+            this._map.addLayer(this._routePlacesLayer);
+            this._map.addLayer(this._routeLineLayer);
+            
+            if (doZoom) {
+                const trackExtent = this._routeLineLayer.getSource()?.getFeatures()[0].getGeometry()?.getExtent();
+    
+                if (trackExtent) {
+                    const center = this.getCenter(trackExtent);
+        
+                    this._map.getView().setCenter(center);
+                    this._map.getView().setZoom(this.getInitialZoom() + 1);
+                }    
+            }
+            
+            this._showRoute = true;
+        }
+    }
+
     private removeNonTimelapseLayers() {
         this.removeTrackLayers();
+        this.removeRouteLayers();
     
         if (this._showYear) {
             this._map.removeLayer(this._yearLayer);
@@ -766,5 +895,6 @@ export class MapHelper {
         });
         
         return lineLayer;
-    } 
+    }
+    
 }

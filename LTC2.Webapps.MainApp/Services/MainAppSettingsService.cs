@@ -30,6 +30,8 @@ namespace LTC2.Webapps.MainApp.Services
             GetSettingsFromConfig<CalculatorSettings>("CalculatorSettings", result);
             GetSettingsFromConfig<MainClientSettings>("MainClientSettings", result);
 
+            GetSettingsFromConfig<SpatiaLiteMapperSettings>("SpatiaLiteMapperSettings", result);
+
             foreach (var key in result.Keys)
             {
                 _allSettings[key] = result[key];

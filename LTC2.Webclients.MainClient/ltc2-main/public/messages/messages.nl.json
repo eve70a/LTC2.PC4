@@ -24,8 +24,14 @@
     "profilemodal.button.save": "Opslaan",
     "profilemodal.button.close": "Sluiten",
     "challengemap.buttonText": "Score",
+    "challengemap.buttonCheckRouteText": "Check Route",
     "challengemap.buttonYearText": "{0} (#{1})",
     "challengemap.buttonLastText": "Laatst rit (#{0})",
     "challengemap.buttonTimelapse": "Timelapse",
-    "challengemap.bottumText": "© 2018-2024 LTC2"
+    "challengemap.bottumText": "© 2018-2024 LTC2",
+    "selectroutemodal.header" : "Upload een route:",
+    "selectroutemodal.text.hint": "Kies een bestand...",
+    "selectroutemodal.button.selectfile": "Kies bestand",
+    "selectroutemodal.button.checkgpx": "Check GPX",
+    "selectroutemodal.text.noroutes": "Geen route aangetroffen en/of geen postcode gebieden gevonden"
 }

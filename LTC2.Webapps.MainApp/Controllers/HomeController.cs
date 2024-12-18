@@ -76,7 +76,7 @@ namespace LTC2.Webapps.MainApp.Controllers
 
                     if (validUntil >= DateTime.UtcNow.AddHours(1))
                     {
-                        return Redirect(_appEntrypoint);
+                        return Redirect(_appEntrypoint + $"?t={DateTime.UtcNow.Ticks}");
                     }
                 }
             }
@@ -90,7 +90,7 @@ namespace LTC2.Webapps.MainApp.Controllers
             HttpContext.Response.Cookies.Append(_stateCookieName, state);
             HttpContext.Response.Cookies.Append(_languageCookieName, language ?? _baseTranslationService.CurrentLanguage);
 
-            ViewBag.AppEntryPoint = _appEntrypoint;
+            ViewBag.AppEntryPoint = _appEntrypoint + $"?t={DateTime.UtcNow.Ticks}";
 
             return View();
         }
@@ -205,7 +205,7 @@ namespace LTC2.Webapps.MainApp.Controllers
                 return Unauthorized();
             }
 
-            return Redirect(_appEntrypoint);
+            return Redirect(_appEntrypoint + $"?t={DateTime.UtcNow.Ticks}");
         }
 
     }

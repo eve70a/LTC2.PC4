@@ -5,7 +5,8 @@
     <div>{{ place }}</div>
   </div>
   <div ref="mapcontrol" style="bottom: 10px; left: .5em; width: 150px;" class="ol-unselectable ol-control">
-    <button style="width: 130px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
+    <button style="width: 130px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickCheckRoute()">{{ buttonCheckRouteText }}</button>
+    <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
     <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
     
     <div v-if="hasYear">
@@ -29,13 +30,14 @@
 import { inject, onMounted, ref, defineComponent, nextTick } from 'vue';
 import { AppTypes } from '../types/AppTypes';
 import { Track } from '../models/Track';
+import { Routes } from '../models/Routes';
 
 import { MapHelper } from './helpers/MapHelpers';
 import { fromatDateAsYYYYDDMM } from '../utils/Utils';
 
 export default defineComponent({
 
-    emits: ['detailsRequested', 'spinnerRequested' ],
+    emits: ['detailsRequested', 'spinnerRequested', 'routeSelectionRequested' ],
 
     setup(_, { emit }) {
         const _profileService = inject(AppTypes.IProfileServiceKey);
@@ -55,6 +57,7 @@ export default defineComponent({
         const currentYear = new Date().getFullYear();
 
         const buttonText = _translationService?.getText("challengemap.buttonText");
+        const buttonCheckRouteText = _translationService?.getText("challengemap.buttonCheckRouteText");
         const bottumText = _translationService?.getText("challengemap.bottumText");
         const buttonTimelapseText = _translationService?.getText("challengemap.buttonTimelapse");
 
@@ -95,6 +98,16 @@ export default defineComponent({
             emit('detailsRequested')
         }
 
+        const onclickCheckRoute = () => {
+            console.log("onclickCheckRoute");
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+
+            emit('routeSelectionRequested')
+        }
+
         const doCheckBoxes = (which: number) => {            
             if (checkBoxYear?.value) {
                 const checkBoxElement = checkBoxYear.value;                
@@ -128,6 +141,20 @@ export default defineComponent({
             mapHelper.showHideTrackForSelectedPlace();
 
             doCheckBoxes(3);
+        }
+
+        const showRoute = (routes: Routes) => {
+            console.log('show route');
+            
+            if (mapHelper.getShowLastRide()) {
+                onShowHideLast();
+            }
+
+            if (mapHelper.getShowYear()) {
+                onShowHideYear();
+            }
+            
+            mapHelper.showRoute(routes);
         }
 
         const showTrackForPlace = (placeId: string, track: Track) => {
@@ -179,7 +206,7 @@ export default defineComponent({
             }
         }
 
-        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, onclickDetails, buttonText, buttumYearText, buttonTimelapseText, bottumText, bottumLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate } )
+        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, onclickDetails, onclickCheckRoute, buttonText, buttonCheckRouteText, buttumYearText, buttonTimelapseText, bottumText, bottumLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute } )
     }
 })
 </script>
