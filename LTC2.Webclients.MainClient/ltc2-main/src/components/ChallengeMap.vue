@@ -179,10 +179,7 @@ export default defineComponent({
             hasRoutes.value = mapHelper.getShowRoute();
 
             nextTick(() => {
-                if (checkBoxRoute?.value) {
-                    const checkBoxElement = checkBoxRoute.value;                
-                    checkBoxElement.checked = mapHelper.getShowRoute();
-                }
+                doCheckBoxes(4);
             });
         }
 
@@ -202,10 +199,7 @@ export default defineComponent({
             currentTrackDate.value = fromatDateAsYYYYDDMM(currTrack?.visitedOn ?? "");
 
             nextTick(() => {
-                if (checkBoxTrack?.value) {
-                    const checkBoxElement = checkBoxTrack.value;                
-                    checkBoxElement.checked = mapHelper.getShowTrackForSelectedPlace();
-                }
+                doCheckBoxes(3);
             });
         }
 
