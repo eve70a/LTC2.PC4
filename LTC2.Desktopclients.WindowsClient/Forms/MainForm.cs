@@ -246,7 +246,15 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
 
             if (_refreshEnabledFor != null)
             {
-                btnRefresh.Enabled = _refreshEnabledFor.Contains(webView.CoreWebView2.Source);
+                foreach (var url in _refreshEnabledFor)
+                {
+                    if (webView.CoreWebView2.Source.StartsWith(url))
+                    {
+                        btnRefresh.Enabled = true;
+                        
+                        break;
+                    }
+                }
 
                 if (btnRefresh.Enabled)
                 {
