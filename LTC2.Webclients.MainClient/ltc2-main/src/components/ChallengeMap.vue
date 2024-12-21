@@ -10,16 +10,20 @@
     <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
     
     <div v-if="hasYear">
-        <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ buttumYearText }}</a>
+        <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ bottumYearText }}</a>
     </div>
     <div v-else>
-        <p style="margin-left: 10px;">-- {{ buttumYearText }} </p>
+        <p style="margin-left: 10px;">-- {{ bottumYearText }} </p>
     </div>
     
     <input type="checkbox" ref="checkBoxLast"  style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ bottumLastText }}</a>
     
     <div v-if="hasTrack">
         <input type="checkbox" ref="checkBoxTrack" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"> {{ currentTrackDate }} </a>
+    </div>
+
+    <div v-if="hasRoutes">
+        <input type="checkbox" ref="checkBoxRoute" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideRoute()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideRoute()"> {{ buttonRouteText }} </a>
     </div>
 
     <p style="margin-left: 10px; margin-top: 5px; font-size: 12px;">{{ bottumText }}</p>
@@ -50,9 +54,11 @@ export default defineComponent({
         const checkBoxYear = ref<HTMLInputElement>();
         const checkBoxLast = ref<HTMLInputElement>();
         const checkBoxTrack = ref<HTMLInputElement>();
+        const checkBoxRoute = ref<HTMLInputElement>();
         const place = ref<string>("");
         const hasYear = ref<boolean>();
         const hasTrack = ref<boolean>();
+        const hasRoutes = ref<boolean>();
         const currentTrackDate = ref<string>(""); 
         const currentYear = new Date().getFullYear();
 
@@ -63,18 +69,21 @@ export default defineComponent({
 
         let mapHelper: MapHelper;
         
-        let buttumYearText: string | undefined;
-        let bottumLastText: string | undefined;
+        let bottonYearText: string | undefined;
+        let buttonLastText: string | undefined;
+        let buttonRouteText: string | undefined;
   
         const score = _profileService?.getProfile()?.placesInAllTimeScore;
         const scoreYear = _profileService?.getProfile()?.placesInYearScore;
         const scoreLast = _profileService?.getProfile()?.placesInLastRideScore;
         
         const yearTotal = (scoreYear?.length ?? 0).toString();
-        buttumYearText = _translationService?.getTextViaTemplate("challengemap.buttonYearText", [ currentYear.toString(), yearTotal ]);
+        bottonYearText = _translationService?.getTextViaTemplate("challengemap.buttonYearText", [ currentYear.toString(), yearTotal ]);
 
         const lastTotal = (scoreLast?.length ?? 0).toString();
-        bottumLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastTotal ]);
+        buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastTotal ]);
+
+        buttonRouteText =  _translationService?.getText("challengemap.buttonRouteText")
 
         hasYear.value = scoreYear && scoreYear.length > 0;
 
@@ -123,6 +132,11 @@ export default defineComponent({
                 const checkBoxElement = checkBoxTrack.value;
                 checkBoxElement.checked = which == 3 ? mapHelper.getShowTrackForSelectedPlace() : false;
             }
+
+            if (checkBoxRoute?.value) {
+                const checkBoxElement = checkBoxRoute.value;
+                checkBoxElement.checked = which == 4 ? mapHelper.getShowRoute() : false;
+            }
         }
 
         const onShowHideYear = () => {
@@ -143,9 +157,15 @@ export default defineComponent({
             doCheckBoxes(3);
         }
 
+        const onShowHideRoute = () => {
+            mapHelper.showHideRoute();
+
+            doCheckBoxes(4);
+        }
+
         const showRoute = (routes: Routes) => {
             console.log('show route');
-            
+
             if (mapHelper.getShowLastRide()) {
                 onShowHideLast();
             }
@@ -155,6 +175,15 @@ export default defineComponent({
             }
             
             mapHelper.showRoute(routes);
+
+            hasRoutes.value = mapHelper.getShowRoute();
+
+            nextTick(() => {
+                if (checkBoxRoute?.value) {
+                    const checkBoxElement = checkBoxRoute.value;                
+                    checkBoxElement.checked = mapHelper.getShowRoute();
+                }
+            });
         }
 
         const showTrackForPlace = (placeId: string, track: Track) => {
@@ -206,7 +235,7 @@ export default defineComponent({
             }
         }
 
-        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, onclickDetails, onclickCheckRoute, buttonText, buttonCheckRouteText, buttumYearText, buttonTimelapseText, bottumText, bottumLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute } )
+        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, checkBoxRoute, onclickDetails, onclickCheckRoute, buttonText, buttonCheckRouteText, buttonRouteText, bottumYearText: bottonYearText, buttonTimelapseText, bottumText, bottumLastText: buttonLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, onShowHideRoute, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute, hasRoutes } )
     }
 })
 </script>

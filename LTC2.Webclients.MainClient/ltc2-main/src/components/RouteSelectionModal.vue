@@ -27,6 +27,7 @@
                   </div>
                   <div class="p-2 space-y-2 overflow-y-clip overflow-x-clip mb-4" style="height: 30px;">
                         <p v-if="isEmpty" class="pl-2 hidden md:block">{{ feedBackNoRoutes }}</p>
+                        <p v-if="isWorking" class="pl-2 hidden md:block">{{ feedBackWorking }}</p>
                   </div>
               </div>
   
@@ -49,6 +50,7 @@
   
   import { AppTypes } from '../types/AppTypes';
   import { Routes } from '../models/Routes';
+  import { emptyString } from '@/models/Constants';
   
   interface HTMLInputEvent extends Event {
     target: HTMLInputElement & EventTarget
@@ -68,8 +70,9 @@
           const tableContainer = ref<HTMLDivElement>();
           const inputElement = ref<HTMLInputElement>();
           const selectFileButtons = ref<HTMLButtonElement>();
-          const fileName = ref("");
+          const fileName = ref(emptyString);
           const feedBackNoRoutes =  _translationService?.getText("selectroutemodal.text.noroutes");
+          const feedBackWorking =  _translationService?.getText("selectroutemodal.text.working");
 
           const header = _translationService?.getText("selectroutemodal.header");
           const texthint = _translationService?.getText("selectroutemodal.text.hint");
@@ -78,6 +81,7 @@
   
           const isButtonDisabled = ref(true);
           const isEmpty = ref(false);
+          const isWorking = ref(false);
 
           let modal: Modal;
           let selectedFiles: FileList | undefined;
@@ -92,6 +96,7 @@
           const showModal = () => {
             isButtonDisabled.value = fileName.value == "";
             isEmpty.value = false;
+            isWorking.value = false;
             
             modal.show();
           }
@@ -138,6 +143,9 @@
           }
 
           const onSelectGpx = async () => {
+            isButtonDisabled.value = true;
+            isWorking.value = true;
+
             let files = selectedFiles;
 
             if (!files?.length) {
@@ -163,9 +171,12 @@
 
                 emit('error', error);                     
             }
+
+            isButtonDisabled.value = false;
+            isWorking.value = false;
           }
     
-          return { showModal, hideModal, modalElement, header, tableContainer, texthint, onSelectFile, inputElement, fileName, buttonTextSelectFile, checkGpxUrl, selectFileButtons, isButtonDisabled, onSelectGpx, buttonTextCheckGpx, feedBackNoRoutes, isEmpty }
+          return { showModal, hideModal, modalElement, header, tableContainer, texthint, onSelectFile, inputElement, fileName, buttonTextSelectFile, checkGpxUrl, selectFileButtons, isButtonDisabled, onSelectGpx, buttonTextCheckGpx, feedBackNoRoutes, feedBackWorking, isEmpty, isWorking }
       }
   })
   

@@ -35,7 +35,9 @@ export class RouteCheckerService implements IRouteCheckerService {
                 const formData = new FormData();
                 formData.append("file", file);
 
-                const route = await axios.postForm<Routes>(url + '/api/Route/checkgpx', formData, {headers: {'Authorization': `Bearer ${token}`}, timeout: this._clientSetting?.requestTimeout})
+                const timeout = 3 * (this._clientSetting?.requestTimeout ?? 5000);
+
+                const route = await axios.postForm<Routes>(url + '/api/Route/checkgpx', formData, {headers: {'Authorization': `Bearer ${token}`}, timeout: timeout})
 
                 return route.data;
             } catch(error) {

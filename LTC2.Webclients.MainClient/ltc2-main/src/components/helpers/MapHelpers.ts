@@ -45,6 +45,9 @@ export class MapStyleHelper {
     public static LayerStyleTrackLine = 6;
     public static LayerStyleTimelapseLine = 7;
     public static LayerStyleTimelapseLineLast = 8;
+    public static LayerStyleCheckedPlace = 9;
+    public static LayerStyleNewCheckedPlace = 10;
+    public static LayerStyleNewYearCheckedPlace = 11;
 
     private _styles : Style[] = [];
 
@@ -134,6 +137,37 @@ export class MapStyleHelper {
                 width: 2
             })
         }); 
+
+        const layerStyleCheckedPlace = new Style({
+            fill: new Fill({
+                color: "rgba(204, 51, 0, 0.7)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
+        const layerStyleNewCheckedPlace = new Style({
+            fill: new Fill({
+                color: "rgba(0, 255, 0, 0.7)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
+        const layerStyleNewCheckedYearPlace = new Style({
+            fill: new Fill({
+                color: "rgba(0, 128, 0, 0.7)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
         this._styles[MapStyleHelper.LayerStyle] = layerStyle;
         this._styles[MapStyleHelper.LayerStyleVisited] = layerStyleVisited;
         this._styles[MapStyleHelper.LayerStyleVisitedYear] = layerStyleVisitedYear;
@@ -143,6 +177,9 @@ export class MapStyleHelper {
         this._styles[MapStyleHelper.LayerStyleTrackLine] = layerStyleTrackLine;
         this._styles[MapStyleHelper.LayerStyleTimelapseLine] = layerStyleTimelapseLine;
         this._styles[MapStyleHelper.LayerStyleTimelapseLineLast] = layerStyleTimelapseLineLast;
+        this._styles[MapStyleHelper.LayerStyleCheckedPlace] = layerStyleCheckedPlace;
+        this._styles[MapStyleHelper.LayerStyleNewCheckedPlace] = layerStyleNewCheckedPlace;
+        this._styles[MapStyleHelper.LayerStyleNewYearCheckedPlace] = layerStyleNewCheckedYearPlace;
     }
 }
 
@@ -176,6 +213,8 @@ export class MapHelper {
 
     private _currentTrack: Track | undefined;
     private _currentPlace: string | undefined;
+
+    private _currentRoutes: Routes | undefined;
 
     private _trackLayer: VectorTileLayer | undefined;
     private _lineTrackLayer: VectorLayer<VectorSource> | undefined;
@@ -239,6 +278,10 @@ export class MapHelper {
 
     public getCurrentTrack(): Track | undefined {
         return this._currentTrack
+    }
+
+    public getCurrentRoutes(): Routes | undefined {
+        return this._currentRoutes
     }
 
     public getStyle(styleId: number): Style {
@@ -333,6 +376,31 @@ export class MapHelper {
         if (!isTrackShowed) {
             if (this._currentPlace && this._currentTrack) {
                 this.showTrackForSelectedPlace(this._currentPlace, this._currentTrack, false);
+            }
+        }
+    }
+
+    public showHideRoute() {
+        const isRouteShowed = this._showRoute;
+        
+        this.removeTrackLayers();
+        this.removeTimelapseLayers();
+        this.removeRouteLayers();
+
+        if (this._showYear) {
+            this._map.removeLayer(this._yearLayer);
+            this._showYear = false;
+        }
+
+        if (this._showLast) {
+            this._map.removeLayer(this._lastRideLineLayer);
+            this._map.removeLayer(this._lastRidePlacesLayer);
+            this._showLast = false;
+        }
+
+        if (!isRouteShowed) {
+            if (this._currentRoutes) {
+                this.showRoute(this._currentRoutes, false);
             }
         }
     }
@@ -501,16 +569,13 @@ export class MapHelper {
             this.removeTimelapseLayers();
             this.removeRouteLayers();
     
-            //this._currentTrack = track;
-            //this._currentPlace = placeId;
-    
-            //const currentTrack = this._currentTrack;
-            //const currentPlace = this._currentPlace;
+            this._currentRoutes = routes;
+
             const mapStyleHelper = this._mapStyleHelper;
-    
-            //const placesOnRoutes = routes.routeCollection[0].places;
-            //const trackOnRoutes = routes.routeCollection[0].coordinates;
-            
+
+            const score = this._score;
+            const scoreYear = this._scoreYear;
+                
             this._routePlacesLayer = new VectorTileLayer({
                 source: this._vectorTileSource,
                 style: function (feature) {
@@ -518,7 +583,16 @@ export class MapHelper {
                     const id = featurePointer.split(":")[0];
     
                     if (places.some(s => s === id)){
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack);
+                        const isVisited = score && score.some(v => v.id === id);
+                        const isVisitedYear = scoreYear && scoreYear.some(v => v.id === id);
+
+                        if (!isVisited) {
+                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewCheckedPlace);
+                        } else if (!isVisitedYear) {
+                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewYearCheckedPlace)
+                        }
+
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleCheckedPlace);
                     }
     
                     return new Style();
