@@ -97,15 +97,7 @@ namespace LTC2.Shared.StravaConnector.Proxies
                     {
                         if (hpe.Headers != null)
                         {
-                            var responseHeaders = hpe.Headers;
-
-                            SanitizeUsageAndLimitHeaders(responseHeaders);
-
-                            var limitsOnly = new LimitsOnlyResponse(responseHeaders[_stravaRateLimit], responseHeaders[_stravaRateUsage]);
-
-                            _logger.LogWarning($"Too many Strava requests [{limitsOnly.QuarterRateLimit},{limitsOnly.DayRateLimit}] [{limitsOnly.QuarterRateUsage},{limitsOnly.DayRateUsage}]");
-
-                            throw new StraveTooManyRequestsException(limitsOnly, hpe);
+                            HandleTooManyRequests(hpe);
                         }
 
                         throw;
@@ -183,15 +175,7 @@ namespace LTC2.Shared.StravaConnector.Proxies
                     {
                         if (hpe.Headers != null)
                         {
-                            var responseHeaders = hpe.Headers;
-
-                            SanitizeUsageAndLimitHeaders(responseHeaders);
-
-                            var limitsOnly = new LimitsOnlyResponse(responseHeaders[_stravaRateLimit], responseHeaders[_stravaRateUsage]);
-
-                            _logger.LogWarning($"Too many Strava requests [{limitsOnly.QuarterRateLimit},{limitsOnly.DayRateLimit}] [{limitsOnly.QuarterRateUsage},{limitsOnly.DayRateUsage}]");
-
-                            throw new StraveTooManyRequestsException(limitsOnly, hpe);
+                            HandleTooManyRequests(hpe);
                         }
 
                         throw;
@@ -213,6 +197,129 @@ namespace LTC2.Shared.StravaConnector.Proxies
             }
 
             return null;
+        }
+
+        public async Task<GetRoutesResponse> GetRoutes(GetRoutesRequest request, string accessToken)
+        {
+            var perPage = $"per_page={_stravaHttpProxySettings.MaxRoutesCount}";
+
+            var retryCount = 0;
+
+            while (retryCount < 3)
+            {
+                try
+                {
+                    var authHeader = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                    var responseHeaders = CreateRatesHeaderFilter();
+
+                    var routes = await ExecuteGetRequest<List<StravaRoute>>($"/api/v3/athletes/{request.AthleteId}/routes?{perPage}", responseHeaders, authHeader);
+
+                    SanitizeUsageAndLimitHeaders(responseHeaders);
+
+                    var result = new GetRoutesResponse(responseHeaders[_stravaRateLimit], responseHeaders[_stravaRateUsage])
+                    {
+                        Routes = routes
+                    };
+
+                    return result;
+                }
+                catch (HttpProxyException hpe)
+                {
+                    if (hpe.Code == StravaTooManyRequestsResponseCode)
+                    {
+                        if (hpe.Headers != null)
+                        {
+                            HandleTooManyRequests(hpe);
+                        }
+
+                        throw;
+                    }
+                    else if (hpe.Code < (int)HttpStatusCode.InternalServerError)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        retryCount++;
+
+                        if (retryCount >= 3)
+                        {
+                            throw;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<GetRouteDetailsAsGpxReponse> GetRouteAsGpx(GetRouteDetailsAsGpxRequest request, string accessToken)
+        {
+            var retryCount = 0;
+
+            while (retryCount < 3)
+            {
+                try
+                {
+                    var authHeader = new AuthenticationHeaderValue("Bearer", accessToken);
+
+                    var responseHeaders = CreateRatesHeaderFilter();
+
+                    var gpx = await ExecuteGetRequest($"/api/v3/routes/{request.RouteId}/export_gpx", authHeader, responseHeaders);
+
+                    SanitizeUsageAndLimitHeaders(responseHeaders);
+
+                    var result = new GetRouteDetailsAsGpxReponse(responseHeaders[_stravaRateLimit], responseHeaders[_stravaRateUsage])
+                    {
+                        Gpx = gpx
+                    };
+
+                    return result;
+                }
+                catch (HttpProxyException hpe)
+                {
+                    if (hpe.Code == StravaTooManyRequestsResponseCode)
+                    {
+                        if (hpe.Headers != null)
+                        {
+                            HandleTooManyRequests(hpe);
+                        }
+
+                        throw;
+                    }
+                    else if (hpe.Code < (int)HttpStatusCode.InternalServerError)
+                    {
+                        throw;
+                    }
+                    else
+                    {
+                        retryCount++;
+
+                        if (retryCount >= 3)
+                        {
+                            throw;
+                        }
+                    }
+                }
+            }
+
+            return null;
+
+        }
+
+        private void HandleTooManyRequests(HttpProxyException hpe)
+        {
+            var responseHeaders = hpe.Headers;
+
+            SanitizeUsageAndLimitHeaders(responseHeaders);
+
+            var limitsOnly = new LimitsOnlyResponse(responseHeaders[_stravaRateLimit], responseHeaders[_stravaRateUsage]);
+
+            _logger.LogWarning($"Too many Strava requests [{limitsOnly.QuarterRateLimit},{limitsOnly.DayRateLimit}] [{limitsOnly.QuarterRateUsage},{limitsOnly.DayRateUsage}]");
+
+            throw new StraveTooManyRequestsException(limitsOnly, hpe);
+
         }
 
         private GetActivityCoordinateStreamResponse GetStreamFromCaches(GetActivityCoordinateStreamRequest request)

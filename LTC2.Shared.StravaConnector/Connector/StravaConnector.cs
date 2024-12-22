@@ -399,6 +399,50 @@ namespace LTC2.Shared.StravaConnector.Connector
             return response;
         }
 
+        public async Task<GetRoutesResponse> GetRoutes(GetRoutesRequest request)
+        {
+            var session = await GetSession(request.AthleteId);
+
+            try
+            {
+                return await _stravaProxy.GetRoutes(request, session.AccessToken);
+            }
+            catch (StraveTooManyRequestsException ex)
+            {
+                _logger.LogWarning(ex, "Too many requests reported by Strava and noticed by connector when retrieving routes.");
+
+                return new GetRoutesResponse(ex.Limits);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving routes.");
+
+                throw;
+            }
+        }
+
+        public async Task<GetRouteDetailsAsGpxReponse> GetRouteDetailsAsGpx(GetRouteDetailsAsGpxRequest request)
+        {
+            var session = await GetSession(request.AthleteId);
+
+            try
+            {
+                return await _stravaProxy.GetRouteAsGpx(request, session.AccessToken);
+            }
+            catch (StraveTooManyRequestsException ex)
+            {
+                _logger.LogWarning(ex, "Too many requests reported by Strava and noticed by connector when retrieving routes.");
+
+                return new GetRouteDetailsAsGpxReponse(ex.Limits);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while retrieving routes.");
+
+                throw;
+            }
+        }
+
         private async Task WaitForQuarterSlot<TResultType>(OnWaitingForSlot<TResultType> onWaitingForSlot, TResultType subject) where TResultType : class
         {
             var currentStravaSlot = RoundUp(DateTime.UtcNow, TimeSpan.FromMinutes(15));

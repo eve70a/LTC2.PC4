@@ -28,6 +28,10 @@ namespace LTC2.Shared.StravaConnector.Interfaces
 
         public Task<List<List<double>>> GetTrackForActivity<TResultType>(string activityId, bool bypassCache, string accessToken, OnWaitingForSlot<TResultType> onWaitingForSlot, TResultType subject) where TResultType : class;
 
+        public Task<GetRoutesResponse> GetRoutes(GetRoutesRequest request);
+
+        public Task<GetRouteDetailsAsGpxReponse> GetRouteDetailsAsGpx(GetRouteDetailsAsGpxRequest request);
+
 
     }
 }

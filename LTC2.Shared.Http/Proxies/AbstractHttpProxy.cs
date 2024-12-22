@@ -86,7 +86,7 @@ namespace LTC2.Shared.Http.Proxies
             return response;
         }
 
-        protected async Task<string> ExecuteGetRequest(string uri, AuthenticationHeaderValue authHeader = null)
+        protected async Task<string> ExecuteGetRequest(string uri, AuthenticationHeaderValue authHeader = null, Dictionary<string, string> filteredResponseHeaders = null)
         {
             var requestMessage = new HttpRequestMessage(HttpMethod.Get, uri);
             requestMessage.Headers.Accept.Add(ApplicationJsonMediaTypeWithQualityHeaderValue);
@@ -97,6 +97,19 @@ namespace LTC2.Shared.Http.Proxies
             }
 
             var responseMessage = await _httpClient.SendAsync(requestMessage);
+
+            if (filteredResponseHeaders != null)
+            {
+                var headers = responseMessage.Headers;
+
+                foreach (var header in filteredResponseHeaders)
+                {
+                    if (headers.Contains(header.Key))
+                    {
+                        filteredResponseHeaders[header.Key] = headers.GetValues(header.Key).FirstOrDefault();
+                    }
+                }
+            }
 
             if (!responseMessage.IsSuccessStatusCode)
             {

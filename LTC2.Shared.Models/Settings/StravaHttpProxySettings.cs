@@ -6,5 +6,7 @@
 
         public string ClientSecret { get; set; }
 
+        public int MaxRoutesCount { get; set; } = 50;
+
     }
 }
