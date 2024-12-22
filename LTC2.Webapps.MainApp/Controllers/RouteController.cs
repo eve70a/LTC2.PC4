@@ -37,7 +37,7 @@ namespace LTC2.Webapps.MainApp.Controllers
         [HttpPost]
         [Authorize]
         [Route("checkgpx")]
-        public IActionResult CheckGpx([FromForm] IFormFile file)
+        public IActionResult CheckGpx(IFormFile file)
         {
             var fileName = ReadGpxFile(file);
 
