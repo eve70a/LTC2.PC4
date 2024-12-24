@@ -11,8 +11,8 @@
 
   "form.select.profile": "Kies een profiel...",
   "groupbox.profile.info": "Profiel informatie",
-  "groupbox.select.profile": "Selecteer Proiel",
-  "button.select.profile": "Selecteer Proiel...",
+  "groupbox.select.profile": "Selecteer Profiel",
+  "button.select.profile": "Selecteer Profiel...",
   "label.no.profiles.1": "Je hebt nog geen profiel aangemaakt.",
   "label.no.profiles.2": "Maak eerst met 'Profiel Manager' een profiel aan en herstart de applicatie.",
   "label.multiple.profiles.1": "Er zijn meerdere profielen gevonden.",

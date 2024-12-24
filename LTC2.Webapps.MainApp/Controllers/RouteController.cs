@@ -60,7 +60,7 @@ namespace LTC2.Webapps.MainApp.Controllers
             return Ok(response);
         }
 
-        [HttpPost]
+        [HttpGet]
         [Authorize]
         [Route("checkstravaroute")]
         public async Task<IActionResult> CheckStravaRoute([FromQuery] CheckStravaRouteRequest request)

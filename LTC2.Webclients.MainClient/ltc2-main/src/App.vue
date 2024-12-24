@@ -62,6 +62,7 @@ import { Track } from './models/Track';
 import { Routes } from './models/Routes';
 import { IsMobile  } from './utils/Utils';
 import { NotAuthorizedException } from './exceptions/NotAuthorizedException';
+import { LimitsExceededException } from './exceptions/LimitsExceededException';
 import { gloClientSettings } from "./models/ClientSettings";
 
 import ChallengeMap from './components/ChallengeMap.vue';
@@ -100,6 +101,8 @@ export default {
     const hasError =ref<boolean>(false);
     const errorMessage = ref<string | undefined>(_translationService?.getText("app.errortext"));
     const expiredErrorMessage = ref<string | undefined>(_translationService?.getText("app.expiredtext"));
+    const errorDayLimitsMessage = ref<string | undefined>(_translationService?.getText("app.daylimitsexceeded"));
+    const errorQuarterLimitsMessage = ref<string | undefined>(_translationService?.getText("app.quarterlimitexceeded"));
 
     const isStandalone = ref<boolean | undefined>(gloClientSettings.standaloneVersion);
 
@@ -157,6 +160,8 @@ export default {
         window.location.href = "/Home?forceLogout=true"
       } else {
         const isAuthError = error instanceof NotAuthorizedException;
+        const isLimitsError = error instanceof LimitsExceededException;
+
         hasError.value = true;
 
         if (isAuthError){
@@ -165,6 +170,28 @@ export default {
           setTimeout( () => {
             window.location.href = gloClientSettings.mainApplicationForcedLogoutPage;
           }, 2000);
+        } else if (isLimitsError) {
+          const saveMessage = errorMessage.value;
+
+          const limitsError = error as LimitsExceededException;
+          let daylimitsexceeded = false;
+
+          if (limitsError.Limits) {
+            daylimitsexceeded = limitsError.Limits.DayRateUsage >= limitsError.Limits.DayRateLimit;
+          }
+          
+          if (daylimitsexceeded) {
+            errorMessage.value = errorDayLimitsMessage.value;
+          } else {
+            errorMessage.value = errorQuarterLimitsMessage.value;
+          }
+
+          setTimeout( () => {
+            errorMessage.value = saveMessage;
+            
+            hasError.value = false
+          }, 4000);
+
         } else {
           setTimeout( () => {
             hasError.value = false
