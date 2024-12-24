@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System.Data;
 
 namespace LTC2.Shared.StravaConnector.Models
 {
@@ -7,6 +6,8 @@ namespace LTC2.Shared.StravaConnector.Models
     {
         [JsonProperty("id")]
         public long Id { get; set; }
+
+        public string RouteId => Id.ToString();
 
         [JsonProperty("name")]
         public string Name { get; set; }
