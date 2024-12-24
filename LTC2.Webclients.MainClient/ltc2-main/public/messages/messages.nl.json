@@ -39,7 +39,7 @@
     "selectroutemodal.button.loadstravaroutes": "Of laad je Strava routes",
     "selectroutemodal.text.noroutes": "Geen route aangetroffen en/of geen postcode gebieden gevonden",
     "selectroutemodal.text.working": "Route wordt ingelezen en gecontroleerd",
-    "selectroutemodal.text.instruction": "Selecteer het GPX bestand dat je wilt controleren",
+    "selectroutemodal.text.instruction": "Selecteer het GPX bestand dat je wil controleren",
     "selectroutemodal.text.routesNotYetLoadedText": "Nog geen routes geladen....",
     "selectroutemodal.text.noRoutesInStrava": "Geen routes in Strava gevonden!",
     "selectroutemodal.text.loadingStravaRoutesText": "Je Strava routes worden geladen....",
