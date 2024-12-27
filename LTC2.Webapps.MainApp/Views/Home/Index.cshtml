@@ -16,7 +16,7 @@
 
     <script>
         var callbackConnect = document.getElementById("callbackupconnect").href;
-        var stravaUrlConnect = "https://www.strava.com/oauth/authorize?client_id=@ViewBag.StravaAppId&response_type=code&approval_prompt=@ViewBag.ApprovalPrompt&scope=read,activity:read_all,profile:read_all&state=@ViewBag.State&redirect_uri=" + callbackConnect;
+        var stravaUrlConnect = "https://www.strava.com/oauth/authorize?client_id=@ViewBag.StravaAppId&response_type=code&approval_prompt=@ViewBag.ApprovalPrompt&scope=read,activity:read,profile:read_all,read_all,activity:read_all&state=@ViewBag.State&redirect_uri=" + callbackConnect;
 
         function ConnectToStrava(doRefresh) {
             location.href = stravaUrlConnect;
