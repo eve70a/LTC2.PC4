@@ -82,6 +82,24 @@ namespace LTC2.Webapps.MainApp.Controllers
                     {
                         var gpx = await _stravaConnector.GetRouteDetailsAsGpx(gpxRequest);
 
+                        if (gpx.LimitsExceeded)
+                        {
+                            var response = new Routes();
+                            response.LimitInfo = new LimitInfo();
+
+                            response.LimitInfo.LimitsExceeded = true;
+
+                            if (gpx.HasLimits)
+                            {
+                                response.LimitInfo.QuarterRateLimit = gpx.QuarterRateLimit;
+                                response.LimitInfo.QuarterRateUsage = gpx.QuarterRateUsage;
+                                response.LimitInfo.DayRateLimit = gpx.DayRateLimit;
+                                response.LimitInfo.DayRateUsage = gpx.DayRateUsage;
+                            }
+
+                            return Ok(response);
+                        }
+
                         if (gpx != null && gpx.Gpx != null)
                         {
                             var gpxFile = WriteGpxFile(gpx.Gpx);
@@ -98,7 +116,7 @@ namespace LTC2.Webapps.MainApp.Controllers
                         var response = new Routes();
                         response.LimitInfo = new LimitInfo();
 
-                        response.LimitInfo.LimitExceeded = true;
+                        response.LimitInfo.LimitsExceeded = true;
 
                         if (ex.Limits.HasLimits)
                         {

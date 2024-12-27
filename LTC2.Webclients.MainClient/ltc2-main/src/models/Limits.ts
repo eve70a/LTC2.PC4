@@ -1,10 +1,10 @@
 
 export abstract class Limits {
-    public QuarterRateLimit: Number = -1;
+    public quarterRateLimit: Number = -1;
 
-    public QuarterRateUsage: Number = -1;
+    public quarterRateUsage: Number = -1;
 
-    public DayRateLimit: Number = -1;
+    public dayRateLimit: Number = -1;
 
-    public DayRateUsage: Number = -1;
+    public dayRateUsage: Number = -1;
 }

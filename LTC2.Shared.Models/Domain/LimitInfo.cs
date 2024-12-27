@@ -12,6 +12,6 @@
 
         public int DayRateUsage { get; set; } = int.MaxValue;
 
-        public bool LimitExceeded { get; set; } = false;
+        public bool LimitsExceeded { get; set; } = false;
     }
 }

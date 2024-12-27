@@ -421,6 +421,15 @@ export class MapHelper {
         return this._showRoute;
     }
 
+    public isStravaRoute(): boolean {
+        if (this._currentRoutes)
+        {
+            return this._currentRoutes.isStravaRoute;
+        }
+
+        return false;
+    }
+
     public isTimelapseRunning(): boolean {
         return this._timelapseRunning;
     }

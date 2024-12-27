@@ -43,7 +43,7 @@
           </div>
         </div>
       </div>
-      <ChallengeMap ref="challengeMap" @detailsRequested="onShowResultClick()" @spinnerRequested="onSpinnerRequested()" @route-selection-requested="onRouteSelectionRequested()"/>
+      <ChallengeMap ref="challengeMap" @detailsRequested="onShowResultClick()" @route-requested="onRoutesRequested" @spinnerRequested="onSpinnerRequested()" @route-selection-requested="onRouteSelectionRequested()"/>
       <ResultsModal :visits="visits" ref="resultsModal" @error="onError" @track-for-place-requested="onTrackForPlaceRequested" />
       <ProfileModal ref="profileModal" @profileUpdated="onProfileUpdated()" @error="onError"/>
       <SpinnerModal ref="spinnerModal" />
@@ -177,7 +177,7 @@ export default {
           let daylimitsexceeded = false;
 
           if (limitsError.Limits) {
-            daylimitsexceeded = limitsError.Limits.DayRateUsage >= limitsError.Limits.DayRateLimit;
+            daylimitsexceeded = limitsError.Limits.dayRateUsage >= limitsError.Limits.dayRateLimit;
           }
           
           if (daylimitsexceeded) {

@@ -27,6 +27,7 @@
     "profilemodal.button.close": "Sluiten",
     "challengemap.buttonText": "Score",
     "challengemap.buttonCheckRouteText": "Check Route",
+    "challengemap.buttonReloadRouteText": "Herlaad Route",
     "challengemap.buttonYearText": "{0} (#{1})",
     "challengemap.buttonLastText": "Laatst rit (#{0})",
     "challengemap.buttonTimelapse": "Timelapse",

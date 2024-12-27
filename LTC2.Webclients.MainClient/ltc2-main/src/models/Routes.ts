@@ -1,10 +1,13 @@
 import { Route } from './Route'
 import { emptyString } from './Constants'
-import { AbstractLimitsStravaResponse } from './AbstractLimitsStravaResponse'
+import { LimitsInfo } from './LimitsInfo';
 
-export class Routes extends AbstractLimitsStravaResponse {
+export class Routes {
+
+    public isStravaRoute: boolean = false;
+    public stravaRouteId: string = emptyString;
+    public limitInfo : LimitsInfo | undefined = undefined;
+
     public routeCollection: Route[] = [];
 
-    public IsStravaRoute: boolean = false;
-    public StravaRouteId: string = emptyString;
 }

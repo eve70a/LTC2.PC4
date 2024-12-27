@@ -105,8 +105,8 @@ export class RouteCheckerService implements IRouteCheckerService {
             try {
                 const route = await axios.get<Routes>(url + '/api/Route/checkstravaroute?RouteId=' + routeId, {headers: {'Authorization': `Bearer ${token}`}, timeout: timeout});
 
-                if (route?.data && route.data.limitsExceeded) {
-                    throw new LimitsExceededException("Strava limits exceeded", route.data);
+                if (route?.data?.limitInfo &&  route?.data?.limitInfo.limitsExceeded) {
+                    throw new LimitsExceededException("Strava limits exceeded", route.data.limitInfo);
                 }
 
                 return route.data;

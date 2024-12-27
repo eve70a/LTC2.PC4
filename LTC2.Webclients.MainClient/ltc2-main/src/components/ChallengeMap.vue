@@ -6,9 +6,11 @@
   </div>
   <div ref="mapcontrol" style="bottom: 10px; left: .5em; width: 150px;" class="ol-unselectable ol-control">
     <button style="width: 130px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickCheckRoute()">{{ buttonCheckRouteText }}</button>
+    <button v-if="isStravaRoute" style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickReloadRoute()">{{ buttonReloadRouteText }}</button>
+    
     <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
     <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
-    
+
     <div v-if="hasYear">
         <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ bottumYearText }}</a>
     </div>
@@ -26,6 +28,7 @@
         <input type="checkbox" ref="checkBoxRoute" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideRoute()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideRoute()"> {{ buttonRouteText }} </a>
     </div>
 
+
     <p style="margin-left: 10px; margin-top: 5px; font-size: 12px;">{{ bottumText }}</p>
   </div>
 </template>
@@ -41,12 +44,13 @@ import { fromatDateAsYYYYDDMM } from '../utils/Utils';
 
 export default defineComponent({
 
-    emits: ['detailsRequested', 'spinnerRequested', 'routeSelectionRequested' ],
+    emits: ['detailsRequested', 'spinnerRequested', 'routeSelectionRequested', 'error' ],
 
     setup(_, { emit }) {
         const _profileService = inject(AppTypes.IProfileServiceKey);
         const _clientSettings = inject(AppTypes.ClientSettingsKey);
         const _translationService = inject(AppTypes.ITranslationServiceKey);
+        const _routeCheckerService = inject(AppTypes.IRouteCheckerService);
         
         const challengeMap = ref<HTMLElement>();
         const popup = ref<HTMLElement>();
@@ -59,6 +63,7 @@ export default defineComponent({
         const hasYear = ref<boolean>();
         const hasTrack = ref<boolean>();
         const hasRoutes = ref<boolean>();
+        const isStravaRoute = ref<boolean>();
         const currentTrackDate = ref<string>(""); 
         const currentYear = new Date().getFullYear();
 
@@ -66,6 +71,7 @@ export default defineComponent({
         const buttonCheckRouteText = _translationService?.getText("challengemap.buttonCheckRouteText");
         const bottumText = _translationService?.getText("challengemap.bottumText");
         const buttonTimelapseText = _translationService?.getText("challengemap.buttonTimelapse");
+        const buttonReloadRouteText = _translationService?.getText("challengemap.buttonReloadRouteText");
 
         let mapHelper: MapHelper;
         
@@ -105,6 +111,38 @@ export default defineComponent({
             }
 
             emit('detailsRequested')
+        }
+
+        const onclickReloadRoute = async () => {
+            console.log("onclickReloadRoute");
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+
+            if (mapHelper.isTimelapseRunning()) {
+                mapHelper.performTimelapse(undefined);
+            }
+            
+            emit('spinnerRequested');
+
+            try {
+                const routes = mapHelper.getCurrentRoutes();
+
+                if (routes && routes.isStravaRoute) {
+                    const newRoutes = await _routeCheckerService?.checkRoute(routes.stravaRouteId);
+
+                    if (newRoutes?.routeCollection && newRoutes.routeCollection.length > 0) {
+                        showRoute(newRoutes, false);
+                    }
+                }
+            } catch (error) {
+                console.log("error when selecting track: " + error);
+
+                emit('error', error);                     
+            } finally {
+                emit('spinnerRequested');
+            } 
         }
 
         const onclickCheckRoute = () => {
@@ -163,7 +201,7 @@ export default defineComponent({
             doCheckBoxes(4);
         }
 
-        const showRoute = (routes: Routes) => {
+        const showRoute = (routes: Routes, doZoom = true) => {
             console.log('show route');
 
             if (mapHelper.getShowLastRide()) {
@@ -174,10 +212,11 @@ export default defineComponent({
                 onShowHideYear();
             }
             
-            mapHelper.showRoute(routes);
+            mapHelper.showRoute(routes, doZoom);
 
             hasRoutes.value = mapHelper.getShowRoute();
-
+            isStravaRoute.value = mapHelper.isStravaRoute();
+        
             nextTick(() => {
                 doCheckBoxes(4);
             });
@@ -229,7 +268,7 @@ export default defineComponent({
             }
         }
 
-        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, checkBoxRoute, onclickDetails, onclickCheckRoute, buttonText, buttonCheckRouteText, buttonRouteText, bottumYearText: bottonYearText, buttonTimelapseText, bottumText, bottumLastText: buttonLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, onShowHideRoute, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute, hasRoutes } )
+        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, checkBoxRoute, onclickDetails, onclickCheckRoute, buttonText, buttonReloadRouteText, buttonCheckRouteText, buttonRouteText, bottumYearText: bottonYearText, buttonTimelapseText, bottumText, bottumLastText: buttonLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, onShowHideRoute, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute, hasRoutes, isStravaRoute, onclickReloadRoute } )
     }
 })
 </script>
