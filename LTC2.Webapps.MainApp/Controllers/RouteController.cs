@@ -76,7 +76,7 @@ namespace LTC2.Webapps.MainApp.Controllers
 
                     var gpxRequest = new GetRouteDetailsAsGpxRequest();
                     gpxRequest.AthleteId = Convert.ToInt64(athleteId);
-                    gpxRequest.RouteId = request.RouteId;
+                    gpxRequest.RouteId = Convert.ToInt64(request.RouteId);
 
                     try
                     {

@@ -2,6 +2,6 @@
 {
     public class CheckStravaRouteRequest
     {
-        public long RouteId { get; set; }
+        public string RouteId { get; set; }
     }
 }

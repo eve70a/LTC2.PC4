@@ -8,7 +8,7 @@ namespace LTC2.Shared.Models.Domain
     {
         public bool IsStravaRoute { get; set; }
 
-        public long StravaRouteId { get; set; }
+        public string StravaRouteId { get; set; }
 
         public LimitInfo LimitInfo { get; set; }
 

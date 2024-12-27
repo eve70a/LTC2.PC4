@@ -71,7 +71,7 @@ export class RouteCheckerService implements IRouteCheckerService {
             try {
                 const routes = await axios.get<GetRoutesResponse>(url + '/api/Route/list', {headers: {'Authorization': `Bearer ${token}`}, timeout: timeout});
     
-                if (routes && routes.data && routes.data.limitsExceeded) {
+                if (routes?.data && routes.data.limitsExceeded) {
                     throw new LimitsExceededException("Strava limits exceeded", routes.data);
                 }
 
@@ -90,6 +90,40 @@ export class RouteCheckerService implements IRouteCheckerService {
                 throw error;
             }
     } else {
+            throw new NotAuthorizedException("Missing or expired token.");
+        }
+    }
+
+    async checkRoute(routeId: string): Promise<Routes | undefined> {
+        const token = await this._profileService?.getToken();
+        
+        if (token) {
+            const settings = await this._settingsService?.getSettings();
+            const url = settings?.routeServiceBaseUrl;
+            const timeout = 3 * (this._clientSetting?.requestTimeout ?? 5000);
+            
+            try {
+                const route = await axios.get<Routes>(url + '/api/Route/checkstravaroute?RouteId=' + routeId, {headers: {'Authorization': `Bearer ${token}`}, timeout: timeout});
+
+                if (route?.data && route.data.limitsExceeded) {
+                    throw new LimitsExceededException("Strava limits exceeded", route.data);
+                }
+
+                return route.data;
+            } catch(error) {
+                console.log(error);
+
+                if(axios.isAxiosError(error)){
+                    const axiosError = error as AxiosError;
+
+                    if (axiosError.response?.status == 401){
+                        throw new NotAuthorizedException("Missing or expired token.");
+                    }
+                }
+
+                throw error;
+            }
+        } else {
             throw new NotAuthorizedException("Missing or expired token.");
         }
     }

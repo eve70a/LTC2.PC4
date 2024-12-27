@@ -18,17 +18,15 @@
               <!-- Modal body -->
   
               <div class="pb-0 pt-2 px-2 bg-white dark:bg-gray-900">
-                  <div class="mt-1 flex items-center space-x-2">                                                
+                  <div style="margin-left: 35px;" class="mt-1 flex items-center space-x-2">                                                
                     <input type="file" accept=".gpx" class="hidden" id="fileInput" @change="onSelectFile">
-                    <button onclick="document.getElementById('fileInput').click();" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" type="button">{{buttonTextSelectFile}}</button>
-                    <input type="text" disabled v-model="fileName" ref="inputElement" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-80 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" :placeholder="texthint">                            
+                    <button onclick="document.getElementById('fileInput').click();" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" type="button">{{buttonTextSelectFile}}</button>                    <input type="text" disabled v-model="fileName" ref="inputElement" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-80 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" :placeholder="texthint">                            
                     <button v-if="isButtonDisabled" disabled class="text-white bg-blue-300 rounded outline-none font-medium rounded-lg text-sm px-5 py-2.5" type="button">{{buttonTextCheckGpx}}</button>
                     <button v-else @click="onSelectGpx" ref="selectFileButton" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{{buttonTextCheckGpx}}</button>
                   </div>
-                  <div class="p-2 space-y-2 overflow-y-clip overflow-x-clip mb-4" style="height: 30px; margin-bottom: 10px;">
+                  <div class="flex justify-center p-2 space-y-2 overflow-y-clip overflow-x-clip mb-4" style="height: 30px; margin-bottom: 10px;">
                         <p v-if="isEmpty" class="pl-2 hidden md:block">{{ feedBackNoRoutes }}</p>
                         <p v-else-if="isWorking" class="pl-2 hidden md:block">{{ feedBackWorking }}</p>
-                        <p v-else-if="isStravaRouteLoading" class="pl-2 hidden md:block">{{ feedBackWorking }}</p>
                         <p v-else class="pl-2 hidden md:block">{{ feedBackInstuction }}</p>
                   </div>
               </div>
@@ -75,7 +73,7 @@
   </template>
   
   <script lang="ts">
-  import { defineComponent, ref, onMounted, inject } from 'vue';
+  import { defineComponent, ref, onMounted, inject, nextTick } from 'vue';
   import { Modal } from 'flowbite';
   
   import { AppTypes } from '../types/AppTypes';
@@ -95,7 +93,6 @@
       setup (_, { emit }) {
   
           const _translationService = inject(AppTypes.ITranslationServiceKey);
-          const _settingsService = inject(AppTypes.ISettingsServiceKey);
           const _routeCheckerService = inject(AppTypes.IRouteCheckerService);
          
           const modalElement = ref<HTMLElement>();
@@ -140,9 +137,6 @@
               modal = new Modal(modalElement?.value);
           }) 
   
-          const settings = _settingsService?.getSettingsSync();
-          const checkGpxUrl = settings?.routeServiceBaseUrl + "/api/Route/checkgpx";
-
           const showModal = () => {
             isButtonDisabled.value = fileName.value == emptyString;
             isEmpty.value = false;
@@ -163,7 +157,7 @@
               modal.hide();
           }
 
-          const onSelectRoute = (id: string) => {
+          const onSelectRoute = async (id: string) => {
             console.log('onLoadRoutes');
 
             if (loadRoutesButton?.value && loadRoutesButton.value.disabled) {
@@ -176,8 +170,33 @@
                 loadRoutesButton.value.disabled = true;
             }
             
-            alert(id);
+            try {
+                isStravaRouteLoading.value = true;
 
+                var route = await _routeCheckerService?.checkRoute(id);
+
+                if (route && hasPlaces(route)) {
+                    emit('routeRequested', route);
+
+                    hideModal();
+                }
+                else {
+                    isNoPlaces.value = true;
+
+                    setTimeout( () => {
+                        isNoPlaces.value = false
+                    }, 2500);
+                }                        
+            }
+            catch (error) {
+                console.log("error when selecting track: " + error);
+                            
+                hideModal();
+
+                emit('error', error);                     
+            }
+
+            isStravaRouteLoading.value = false;
             isButtonDisabled.value = fileName.value == emptyString;
 
             if (loadRoutesButton?.value) {
@@ -201,6 +220,10 @@
 
                 isButtonDisabled.value = false;
                 isEmpty.value = false;
+
+                nextTick(() => {
+                    selectFileButton.value?.focus();
+                })
             }
           }
 
@@ -305,7 +328,7 @@
             }
           }
     
-          return { showModal, hideModal, modalElement, header, tableContainer, texthint, onSelectFile, inputElement, fileName, buttonTextSelectFile, checkGpxUrl, selectFileButton, isButtonDisabled, onSelectGpx, buttonTextCheckGpx, feedBackNoRoutes, feedBackWorking, isEmpty, isWorking, feedBackInstuction, buttonTextLoadStravaRoute, isRoutesLoaded, routesNotYetLoadedText, noRoutesInStravaText, isNoStravaRoutes, loadRoutesButton, onLoadRoutes, isLoadingStravaRoutes, loadingStravaRoutesText, sortedRoutes, loadingStravaRouteText, isStravaRouteLoading, isNoPlaces, noPlacesText, onSelectRoute }
+          return { showModal, hideModal, modalElement, header, tableContainer, texthint, onSelectFile, inputElement, fileName, buttonTextSelectFile, selectFileButton, isButtonDisabled, onSelectGpx, buttonTextCheckGpx, feedBackNoRoutes, feedBackWorking, isEmpty, isWorking, feedBackInstuction, buttonTextLoadStravaRoute, isRoutesLoaded, routesNotYetLoadedText, noRoutesInStravaText, isNoStravaRoutes, loadRoutesButton, onLoadRoutes, isLoadingStravaRoutes, loadingStravaRoutesText, sortedRoutes, loadingStravaRouteText, isStravaRouteLoading, isNoPlaces, noPlacesText, onSelectRoute }
       }
   })
   
