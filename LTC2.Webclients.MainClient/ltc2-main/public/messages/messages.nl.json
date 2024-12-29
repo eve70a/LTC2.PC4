@@ -25,7 +25,7 @@
     "profilemodal.lastride.sm": "Meest recente rit '{0}'.",
     "profilemodal.button.save": "Opslaan",
     "profilemodal.button.close": "Sluiten",
-    "profilemodal.todoLabel": "Postcodes die je nog moet afvinken:",
+    "profilemodal.todoLabel": "Je moet nog {0} postcodes afvinken en dat zijn de volgende postcodes:",
     "challengemap.buttonText": "Score",
     "challengemap.buttonCheckRouteText": "Check Route",
     "challengemap.buttonReloadRouteText": "Herlaad Route",

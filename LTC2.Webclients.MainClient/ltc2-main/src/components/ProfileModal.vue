@@ -80,6 +80,8 @@ export default defineComponent ({
         const checkedPlacesCount = profile?.placesInAllTimeScore.length.toString() ?? "0";
         const placeCount = _mapService?.getPlaceCount().toString() ?? "0";
         const lastrideTimestamp = profile?.mostRecentVisitDate ?? "--";
+        const toDoCountNumber = (_mapService?.getPlaceCount() ?? 0) - (profile?.placesInAllTimeScore.length ?? 0);
+        const toDoCount = toDoCountNumber >= 0 ?  toDoCountNumber.toString() : '--';
 
         const visits = _profileService?.getVisits()?.map(v => v.name) ?? new Array<string>();
         const toDos = _mapService?.getGroupedNotCheckedPlaces(80, visits) ?? new Array<string>();
@@ -100,7 +102,7 @@ export default defineComponent ({
         const emailPlaceholder = _translationService?.getText("profilemodal.email.placeholder");
         const buttonSave = _translationService?.getText("profilemodal.button.save");
         const buttonClose = _translationService?.getText("profilemodal.button.close");
-        const todoLabel = _translationService?.getText("profilemodal.todoLabel");
+        const todoLabel = _translationService?.getTextViaTemplate("profilemodal.todoLabel", [toDoCount]);
 
         const name = profile?.name;
         const email = profile?.email;
