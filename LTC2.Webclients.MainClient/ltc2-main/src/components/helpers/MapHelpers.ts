@@ -55,7 +55,36 @@ export class MapStyleHelper {
         this.initStyles();
     }
 
-    public getStyle(styleId: number): Style {
+    public getStyle(styleId: number, map: Map | undefined): Style {        
+        if (map) {
+            const zoom = map.getView().getZoom() ?? 0;
+            const style = this._styles[styleId];
+     
+            let multiplier = 1.0;
+            
+            if (zoom > 14) {
+                multiplier =  4.0
+            } else if (zoom > 12) {
+                multiplier =  3.0
+            } else if (zoom > 10) {
+                multiplier =  2.0
+            } else if (zoom > 8) {
+                multiplier =  1.5
+            }
+     
+            const widthToUse = multiplier * (style.getStroke().getWidth() ?? 0.5);
+    
+            const styletoUse = new Style({
+                fill: style.getFill(),
+                stroke: new Stroke({
+                    color: style.getStroke().getColor(),
+                    width: widthToUse
+                })
+            });
+    
+            return styletoUse;
+        }
+
         return this._styles[styleId];
     }
 
@@ -285,7 +314,7 @@ export class MapHelper {
     }
 
     public getStyle(styleId: number): Style {
-        return this._mapStyleHelper.getStyle(styleId);
+        return this._mapStyleHelper.getStyle(styleId, this._map);
     }
 
     public getMap(): Map{
@@ -494,6 +523,7 @@ export class MapHelper {
         const currentTrack = this._currentTrack;
         const currentPlace = this._currentPlace;
         const mapStyleHelper = this._mapStyleHelper;
+        const map = this._map;
 
         this._trackLayer = new VectorTileLayer({
             source: this._vectorTileSource,
@@ -503,9 +533,9 @@ export class MapHelper {
 
                 if (currentTrack && currentTrack.places && currentTrack.places.some(s => s === id)){
                     if (currentPlace && currentPlace === id) {
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleSelectedPlace);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleSelectedPlace, map);
                     } else {
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack, map);
                     }
                 }
 
@@ -522,7 +552,7 @@ export class MapHelper {
                     )
                 ]
             }),
-            style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine)
+            style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine, undefined)
         });
 
         this._map.addLayer(this._trackLayer);
@@ -596,12 +626,12 @@ export class MapHelper {
                         const isVisitedYear = scoreYear && scoreYear.some(v => v.id === id);
 
                         if (!isVisited) {
-                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewCheckedPlace);
+                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewCheckedPlace, map);
                         } else if (!isVisitedYear) {
-                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewYearCheckedPlace)
+                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewYearCheckedPlace, map)
                         }
 
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleCheckedPlace);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleCheckedPlace, map);
                     }
     
                     return new Style();
@@ -624,11 +654,13 @@ export class MapHelper {
                 }
             });
 
+            const map = this._map;
+
             this._routeLineLayer = new VectorLayer({
                 source : new VectorSource({
                     features: lineFeatures
                 }),
-                style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine)
+                style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine, undefined)
             });
     
             this._map.addLayer(this._routePlacesLayer);
@@ -681,9 +713,9 @@ export class MapHelper {
                 style: function (feature) {
                     const index = feature.getProperties()["index"] + 1
                     if (index == map.getTimelapseIndex()) {
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTimelapseLineLast);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTimelapseLineLast, undefined);
                     } else if (map.getTimelapseIndex() == -1 || index < map.getTimelapseIndex()) {
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTimelapseLine);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTimelapseLine, undefined);
                     } else {
                         return new Style();
                     }
@@ -708,17 +740,18 @@ export class MapHelper {
 
         if (!this._timelapseLayer) {
             const mapStyleHelper = this._mapStyleHelper;
+            const map = this._map;
 
             this._timelapseLayer = new VectorTileLayer({
                 source: this._vectorTileSource,
                 style: function (feature) {
                     const featurePointer = feature.getProperties()["featurePointer"] as string
                     const id = featurePointer.split(":")[0];
-    
+
                     if (newPlaces.has(id)){
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleSelectedPlace);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleSelectedPlace, map);
                     } else if (places.has(id)){
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack, map);
                     }
     
                     return new Style();
@@ -858,12 +891,12 @@ export class MapHelper {
             style: function (feature) {
                 const featurePointer = feature.getProperties()["featurePointer"] as string
                 const id = featurePointer.split(":")[0];
-                
+
                 if (score && score.some(s => s.id === id)) {
-                    return styleHelper.getStyle(MapStyleHelper.LayerStyleVisited);
+                    return styleHelper.getStyle(MapStyleHelper.LayerStyleVisited, map);
                 }
 
-                return styleHelper.getStyle(MapStyleHelper.LayerStyle);
+                return styleHelper.getStyle(MapStyleHelper.LayerStyle, map);
             }
         });
 
@@ -922,6 +955,7 @@ export class MapHelper {
     private initYearLayer(): VectorTileLayer {
         const scoreYear = this._scoreYear;
         const mapStyleHelper = this._mapStyleHelper;
+        const map = this._map;
 
         const ylayer = new VectorTileLayer({
             source: this._vectorTileSource,
@@ -930,7 +964,7 @@ export class MapHelper {
                 const id = featurePointer.split(":")[0];
 
                 if (scoreYear && scoreYear.some(s => s.id === id)){
-                    return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear);
+                    return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear, map);
                 }
 
                 return new Style();
@@ -943,6 +977,7 @@ export class MapHelper {
     private initLastRidePlacesLayer(): VectorTileLayer {
         const scoreLast = this._scoreLast;
         const mapStyleHelper = this._mapStyleHelper;
+        const map = this._map;
 
         const llayer = new VectorTileLayer({
             source: this._vectorTileSource,
@@ -951,7 +986,7 @@ export class MapHelper {
                 const id = featurePointer.split(":")[0];
 
                 if (scoreLast && scoreLast.some(s => s.id === id)){
-                    return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear);
+                    return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear, map);
                 }
 
                 return new Style();
@@ -974,7 +1009,7 @@ export class MapHelper {
                     )
                 ]
             }),
-            style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleLine)
+            style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleLine, undefined)
         });
         
         return lineLayer;
