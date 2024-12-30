@@ -29,5 +29,10 @@ export class SettingsService implements ISettingsService {
         
         return this._mainClientSettings;
     }
+
+    getSettingsSync() : MainClientSettings | undefined {
+        return this._mainClientSettings; 
+    }
+
 }
  

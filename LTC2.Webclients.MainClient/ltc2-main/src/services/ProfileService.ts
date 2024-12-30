@@ -29,7 +29,7 @@ export class ProfileService implements IProfileService {
     private _token: string = emptyString;
     private _profile: Profile | undefined = undefined;
 
-    async getToken(): Promise<string> {
+    async getToken(): Promise<string> {        
         if (this._token){
             
             return this._token;
@@ -170,7 +170,7 @@ export class ProfileService implements IProfileService {
                 const response = await axios.get<Profile>(url + '/api/Profile/profile', {headers: {'Authorization': `Bearer ${this._token}`}, timeout: this._clientSetting?.requestTimeout})
 
                 const profile = response.data;
-
+                
                 if (profile) {
                     if (profile.placesInAllTimeScore) {
                         profile.placesInAllTimeScore.forEach(p => {

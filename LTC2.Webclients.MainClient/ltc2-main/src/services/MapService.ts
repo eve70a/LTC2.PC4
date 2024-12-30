@@ -66,6 +66,50 @@ export class MapService implements IMapService {
         }
     }
 
+    getPlaces(): string[] {
+        this.populateDictionaryWhenEmpty();
+
+        const placesIterator = this._nameDictionary.values();
+        const places: string[] = Array.from(placesIterator).sort();
+
+        return places;
+    }
+
+    getGroupedPlaces(maxChars: number): string[] {
+        const empty = new Array<string>();
+        
+        return this.getGroupedNotCheckedPlaces(maxChars, empty);
+    }
+
+    getGroupedNotCheckedPlaces(maxChars: number, checked: string[]): string[] {
+        const places = this.getPlaces().filter(p => !(checked.some(c => c == p)));
+        const resultLines = new Array<string>();
+
+        let currentLine = emptyString;
+
+        places.forEach(element => {
+            const newLength = 2 + currentLine.length + element.length; 
+            
+            if (newLength <= maxChars) {
+                if (currentLine == emptyString) {
+                    currentLine = element;
+                } else {
+                    currentLine = currentLine + ', ' + element;
+                }
+            } else {
+                resultLines.push(currentLine);
+
+                currentLine = element;
+            }
+        });
+
+        if (currentLine != emptyString) {
+            resultLines.push(currentLine);
+        }
+
+        return resultLines;
+    }
+
     getPlaceName(placeId: string): string {
         if (this._map) {
 

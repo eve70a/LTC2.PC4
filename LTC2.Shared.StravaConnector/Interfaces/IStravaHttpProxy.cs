@@ -11,5 +11,9 @@ namespace LTC2.Shared.StravaConnector.Interfaces
         public Task<GetActivitiesResponse> GetActivities(GetActivitiesRequest request, string accessToken);
 
         public Task<GetActivityCoordinateStreamResponse> GetActivityCoordinateStream(GetActivityCoordinateStreamRequest request, string accessToken);
+
+        public Task<GetRoutesResponse> GetRoutes(GetRoutesRequest request, string accessToken);
+
+        public Task<GetRouteDetailsAsGpxReponse> GetRouteAsGpx(GetRouteDetailsAsGpxRequest request, string accessToken);
     }
 }

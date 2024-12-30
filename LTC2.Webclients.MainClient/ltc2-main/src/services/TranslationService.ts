@@ -49,7 +49,8 @@ export class TranslationService implements ITranslationService {
     }
 
     async loadText(lang: string): Promise<void> {
-        const url = `./messages/messages.${lang}.json`
+        const now = new Date()
+        const url = `./messages/messages.${lang}.json?t=` + now.getTime();
 
         const response = await axios.get(url, { timeout: gloClientSettings.requestTimeout });
         const texts = response.data;

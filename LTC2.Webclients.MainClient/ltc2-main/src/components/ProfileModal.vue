@@ -34,6 +34,18 @@
                             <input type="email" ref="emailInput" @input="validateEmail()" @invalid="validateEmail()" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" :placeholder="emailPlaceholder" required>
                         </div>
                     </form> 
+                    <div v-else>
+     
+                        <hr class="h-px my-8 bg-gray-200 border-0 dark:bg-gray-700" style="margin-top: 10px; margin-bottom: 10px;">
+
+                        <p class="pl-2">{{ todoLabel }}</p>
+
+                        <div class="p-2 space-y-2 overflow-y-scroll overflow-x-clip mb-4" style="height: 160px;">
+                            <p v-for="line in sortedToDos" :key="line" class="p-2" style="padding-top: 0px; padding-bottom: 0px; margin: 0px;">{{ line }}</p>
+                        </div>
+                   
+                    </div>
+
                 </div>
             </div>
             <div v-if="isNotStandalone" class="flex items-center p-4 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
@@ -55,7 +67,6 @@ import { Modal } from 'flowbite';
 import { AppTypes } from '../types/AppTypes';
 import { gloClientSettings } from "../models/ClientSettings";
 
-
 export default defineComponent ({
     
     emits: ['profileUpdated', 'error'],
@@ -68,7 +79,14 @@ export default defineComponent ({
         const profile = _profileService?.getProfile();
         const checkedPlacesCount = profile?.placesInAllTimeScore.length.toString() ?? "0";
         const placeCount = _mapService?.getPlaceCount().toString() ?? "0";
-        const lastrideTimestamp = profile?.mostRecentVisitDate ?? "--"
+        const lastrideTimestamp = profile?.mostRecentVisitDate ?? "--";
+        const toDoCountNumber = (_mapService?.getPlaceCount() ?? 0) - (profile?.placesInAllTimeScore.length ?? 0);
+        const toDoCount = toDoCountNumber >= 0 ?  toDoCountNumber.toString() : '--';
+
+        const visits = _profileService?.getVisits()?.map(v => v.name) ?? new Array<string>();
+        const toDos = _mapService?.getGroupedNotCheckedPlaces(80, visits) ?? new Array<string>();
+
+        const sortedToDos = ref(toDos);
 
         const modalElement = ref<HTMLElement>();
         const emailForm = ref<HTMLFormElement>();
@@ -84,6 +102,7 @@ export default defineComponent ({
         const emailPlaceholder = _translationService?.getText("profilemodal.email.placeholder");
         const buttonSave = _translationService?.getText("profilemodal.button.save");
         const buttonClose = _translationService?.getText("profilemodal.button.close");
+        const todoLabel = _translationService?.getTextViaTemplate("profilemodal.todoLabel", [toDoCount]);
 
         const name = profile?.name;
         const email = profile?.email;
@@ -156,7 +175,7 @@ export default defineComponent ({
             return true;
         }
 
-        return { showModal, hideModal, submitForm, validateEmail, modalElement, header, name, athleteId, athleteLink, clientId, scoreLine, lastRideLine, scoreLineShort, lastRideLineShort, emailInput, emailLabel, emailForm, emailPlaceholder, buttonSave, buttonClose, isNotStandalone }
+        return { showModal, hideModal, submitForm, validateEmail, modalElement, header, name, athleteId, athleteLink, clientId, scoreLine, lastRideLine, scoreLineShort, lastRideLineShort, emailInput, emailLabel, emailForm, emailPlaceholder, buttonSave, buttonClose, isNotStandalone, todoLabel, sortedToDos }
     }
 })
 

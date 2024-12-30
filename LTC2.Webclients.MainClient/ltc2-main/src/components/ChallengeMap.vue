@@ -5,21 +5,29 @@
     <div>{{ place }}</div>
   </div>
   <div ref="mapcontrol" style="bottom: 10px; left: .5em; width: 150px;" class="ol-unselectable ol-control">
-    <button style="width: 130px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
-    <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
+    <button style="width: 130px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickCheckRoute()">{{ buttonCheckRouteText }}</button>
+    <button v-if="isStravaRoute" style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickReloadRoute()">{{ buttonReloadRouteText }}</button>
     
+    <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
+    <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
+
     <div v-if="hasYear">
-        <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ buttumYearText }}</a>
+        <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ bottumYearText }}</a>
     </div>
     <div v-else>
-        <p style="margin-left: 10px;">-- {{ buttumYearText }} </p>
+        <p style="margin-left: 10px;">-- {{ bottumYearText }} </p>
     </div>
     
-    <input type="checkbox" ref="checkBoxLast"  style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ bottumLastText }}</a>
+    <input type="checkbox" ref="checkBoxLast"  class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ bottumLastText }}</a>
     
     <div v-if="hasTrack">
         <input type="checkbox" ref="checkBoxTrack" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"> {{ currentTrackDate }} </a>
     </div>
+
+    <div v-if="hasRoutes">
+        <input type="checkbox" ref="checkBoxRoute" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideRoute()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideRoute()"> {{ buttonRouteText }} </a>
+    </div>
+
 
     <p style="margin-left: 10px; margin-top: 5px; font-size: 12px;">{{ bottumText }}</p>
   </div>
@@ -29,18 +37,20 @@
 import { inject, onMounted, ref, defineComponent, nextTick } from 'vue';
 import { AppTypes } from '../types/AppTypes';
 import { Track } from '../models/Track';
+import { Routes } from '../models/Routes';
 
 import { MapHelper } from './helpers/MapHelpers';
 import { fromatDateAsYYYYDDMM } from '../utils/Utils';
 
 export default defineComponent({
 
-    emits: ['detailsRequested', 'spinnerRequested' ],
+    emits: ['detailsRequested', 'spinnerRequested', 'routeSelectionRequested', 'error' ],
 
     setup(_, { emit }) {
         const _profileService = inject(AppTypes.IProfileServiceKey);
         const _clientSettings = inject(AppTypes.ClientSettingsKey);
         const _translationService = inject(AppTypes.ITranslationServiceKey);
+        const _routeCheckerService = inject(AppTypes.IRouteCheckerService);
         
         const challengeMap = ref<HTMLElement>();
         const popup = ref<HTMLElement>();
@@ -48,30 +58,38 @@ export default defineComponent({
         const checkBoxYear = ref<HTMLInputElement>();
         const checkBoxLast = ref<HTMLInputElement>();
         const checkBoxTrack = ref<HTMLInputElement>();
+        const checkBoxRoute = ref<HTMLInputElement>();
         const place = ref<string>("");
         const hasYear = ref<boolean>();
         const hasTrack = ref<boolean>();
+        const hasRoutes = ref<boolean>();
+        const isStravaRoute = ref<boolean>();
         const currentTrackDate = ref<string>(""); 
         const currentYear = new Date().getFullYear();
 
         const buttonText = _translationService?.getText("challengemap.buttonText");
+        const buttonCheckRouteText = _translationService?.getText("challengemap.buttonCheckRouteText");
         const bottumText = _translationService?.getText("challengemap.bottumText");
         const buttonTimelapseText = _translationService?.getText("challengemap.buttonTimelapse");
+        const buttonReloadRouteText = _translationService?.getText("challengemap.buttonReloadRouteText");
 
         let mapHelper: MapHelper;
         
-        let buttumYearText: string | undefined;
-        let bottumLastText: string | undefined;
+        let bottonYearText: string | undefined;
+        let buttonLastText: string | undefined;
+        let buttonRouteText: string | undefined;
   
         const score = _profileService?.getProfile()?.placesInAllTimeScore;
         const scoreYear = _profileService?.getProfile()?.placesInYearScore;
         const scoreLast = _profileService?.getProfile()?.placesInLastRideScore;
         
         const yearTotal = (scoreYear?.length ?? 0).toString();
-        buttumYearText = _translationService?.getTextViaTemplate("challengemap.buttonYearText", [ currentYear.toString(), yearTotal ]);
+        bottonYearText = _translationService?.getTextViaTemplate("challengemap.buttonYearText", [ currentYear.toString(), yearTotal ]);
 
         const lastTotal = (scoreLast?.length ?? 0).toString();
-        bottumLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastTotal ]);
+        buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastTotal ]);
+
+        buttonRouteText =  _translationService?.getText("challengemap.buttonRouteText")
 
         hasYear.value = scoreYear && scoreYear.length > 0;
 
@@ -95,6 +113,48 @@ export default defineComponent({
             emit('detailsRequested')
         }
 
+        const onclickReloadRoute = async () => {
+            console.log("onclickReloadRoute");
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+
+            if (mapHelper.isTimelapseRunning()) {
+                mapHelper.performTimelapse(undefined);
+            }
+            
+            emit('spinnerRequested');
+
+            try {
+                const routes = mapHelper.getCurrentRoutes();
+
+                if (routes && routes.isStravaRoute) {
+                    const newRoutes = await _routeCheckerService?.checkRoute(routes.stravaRouteId);
+
+                    if (newRoutes?.routeCollection && newRoutes.routeCollection.length > 0) {
+                        showRoute(newRoutes, false);
+                    }
+                }
+            } catch (error) {
+                console.log("error when selecting track: " + error);
+
+                emit('error', error);                     
+            } finally {
+                emit('spinnerRequested');
+            } 
+        }
+
+        const onclickCheckRoute = () => {
+            console.log("onclickCheckRoute");
+            
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
+
+            emit('routeSelectionRequested')
+        }
+
         const doCheckBoxes = (which: number) => {            
             if (checkBoxYear?.value) {
                 const checkBoxElement = checkBoxYear.value;                
@@ -109,6 +169,11 @@ export default defineComponent({
             if (checkBoxTrack?.value) {
                 const checkBoxElement = checkBoxTrack.value;
                 checkBoxElement.checked = which == 3 ? mapHelper.getShowTrackForSelectedPlace() : false;
+            }
+
+            if (checkBoxRoute?.value) {
+                const checkBoxElement = checkBoxRoute.value;
+                checkBoxElement.checked = which == 4 ? mapHelper.getShowRoute() : false;
             }
         }
 
@@ -130,6 +195,33 @@ export default defineComponent({
             doCheckBoxes(3);
         }
 
+        const onShowHideRoute = () => {
+            mapHelper.showHideRoute();
+
+            doCheckBoxes(4);
+        }
+
+        const showRoute = (routes: Routes, doZoom = true) => {
+            console.log('show route');
+
+            if (mapHelper.getShowLastRide()) {
+                onShowHideLast();
+            }
+
+            if (mapHelper.getShowYear()) {
+                onShowHideYear();
+            }
+            
+            mapHelper.showRoute(routes, doZoom);
+
+            hasRoutes.value = mapHelper.getShowRoute();
+            isStravaRoute.value = mapHelper.isStravaRoute();
+        
+            nextTick(() => {
+                doCheckBoxes(4);
+            });
+        }
+
         const showTrackForPlace = (placeId: string, track: Track) => {
             if (mapHelper.getShowLastRide()) {
                 onShowHideLast();
@@ -146,10 +238,7 @@ export default defineComponent({
             currentTrackDate.value = fromatDateAsYYYYDDMM(currTrack?.visitedOn ?? "");
 
             nextTick(() => {
-                if (checkBoxTrack?.value) {
-                    const checkBoxElement = checkBoxTrack.value;                
-                    checkBoxElement.checked = mapHelper.getShowTrackForSelectedPlace();
-                }
+                doCheckBoxes(3);
             });
         }
 
@@ -179,7 +268,7 @@ export default defineComponent({
             }
         }
 
-        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, onclickDetails, buttonText, buttumYearText, buttonTimelapseText, bottumText, bottumLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate } )
+        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, checkBoxRoute, onclickDetails, onclickCheckRoute, buttonText, buttonReloadRouteText, buttonCheckRouteText, buttonRouteText, bottumYearText: bottonYearText, buttonTimelapseText, bottumText, bottumLastText: buttonLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, onShowHideRoute, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute, hasRoutes, isStravaRoute, onclickReloadRoute } )
     }
 })
 </script>

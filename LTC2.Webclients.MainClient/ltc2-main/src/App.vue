@@ -43,10 +43,11 @@
           </div>
         </div>
       </div>
-      <ChallengeMap ref="challengeMap" @detailsRequested="onShowResultClick()" @spinnerRequested="onSpinnerRequested()"/>
+      <ChallengeMap ref="challengeMap" @detailsRequested="onShowResultClick()" @route-requested="onRoutesRequested" @spinnerRequested="onSpinnerRequested()" @route-selection-requested="onRouteSelectionRequested()"/>
       <ResultsModal :visits="visits" ref="resultsModal" @error="onError" @track-for-place-requested="onTrackForPlaceRequested" />
       <ProfileModal ref="profileModal" @profileUpdated="onProfileUpdated()" @error="onError"/>
       <SpinnerModal ref="spinnerModal" />
+      <RouteSelectionModal ref="routeSelectionModal" @error="onError" @route-requested="onRoutesRequested"/>
     </div>
   </div>
 
@@ -58,17 +59,20 @@ import { AppTypes } from './types/AppTypes';
 import { emptyString } from './models/Constants';
 import { Visit } from './models/Visit';
 import { Track } from './models/Track';
+import { Routes } from './models/Routes';
 import { IsMobile  } from './utils/Utils';
 import { NotAuthorizedException } from './exceptions/NotAuthorizedException';
+import { LimitsExceededException } from './exceptions/LimitsExceededException';
 import { gloClientSettings } from "./models/ClientSettings";
 
 import ChallengeMap from './components/ChallengeMap.vue';
 import ResultsModal from './components/ResultsModal.vue';
 import ProfileModal from './components/ProfileModal.vue';
 import SpinnerModal from './components/SpinnerModal.vue';
+import RouteSelectionModal from './components/RouteSelectionModal.vue';
 
 export default {
-  components: { ChallengeMap, ResultsModal, ProfileModal, SpinnerModal },
+  components: { ChallengeMap, ResultsModal, ProfileModal, SpinnerModal, RouteSelectionModal },
   
   setup() {
     const _profileService = inject(AppTypes.IProfileServiceKey);
@@ -97,6 +101,8 @@ export default {
     const hasError =ref<boolean>(false);
     const errorMessage = ref<string | undefined>(_translationService?.getText("app.errortext"));
     const expiredErrorMessage = ref<string | undefined>(_translationService?.getText("app.expiredtext"));
+    const errorDayLimitsMessage = ref<string | undefined>(_translationService?.getText("app.daylimitsexceeded"));
+    const errorQuarterLimitsMessage = ref<string | undefined>(_translationService?.getText("app.quarterlimitexceeded"));
 
     const isStandalone = ref<boolean | undefined>(gloClientSettings.standaloneVersion);
 
@@ -106,6 +112,7 @@ export default {
     const profileModal = ref<typeof ProfileModal>();
     const challengeMap = ref<typeof ChallengeMap>();
     const spinnerModal = ref<typeof SpinnerModal>();
+    const routeSelectionModal = ref<typeof RouteSelectionModal>();
 
     let spinnerActive = false;
     
@@ -130,6 +137,14 @@ export default {
       challengeMap.value?.showTrackForPlace(placeId, track);
     }
 
+    const onRoutesRequested = (routes: Routes) => {
+      challengeMap.value?.showRoute(routes);
+    }
+
+    const onRouteSelectionRequested = () => {
+      routeSelectionModal.value?.showModal();
+    }
+
     const onSpinnerRequested = () => {
       if (spinnerActive) {
         spinnerModal.value?.hideModal();
@@ -145,6 +160,8 @@ export default {
         window.location.href = "/Home?forceLogout=true"
       } else {
         const isAuthError = error instanceof NotAuthorizedException;
+        const isLimitsError = error instanceof LimitsExceededException;
+
         hasError.value = true;
 
         if (isAuthError){
@@ -153,6 +170,28 @@ export default {
           setTimeout( () => {
             window.location.href = gloClientSettings.mainApplicationForcedLogoutPage;
           }, 2000);
+        } else if (isLimitsError) {
+          const saveMessage = errorMessage.value;
+
+          const limitsError = error as LimitsExceededException;
+          let daylimitsexceeded = false;
+
+          if (limitsError.Limits) {
+            daylimitsexceeded = limitsError.Limits.dayRateUsage >= limitsError.Limits.dayRateLimit;
+          }
+          
+          if (daylimitsexceeded) {
+            errorMessage.value = errorDayLimitsMessage.value;
+          } else {
+            errorMessage.value = errorQuarterLimitsMessage.value;
+          }
+
+          setTimeout( () => {
+            errorMessage.value = saveMessage;
+            
+            hasError.value = false
+          }, 4000);
+
         } else {
           setTimeout( () => {
             hasError.value = false
@@ -161,7 +200,7 @@ export default {
       }
     }
     
-    return { name, profileComplete, notCompleteMessage, completeMessage, visits, onError, onShowResultClick, onShowProfileClick, onProfileUpdated, resultsModal, profileModal, buttonText, buttonProfileText, buttonProfileTextAlt, createHSpaceMessage, createHSpaceMessageMobile, createWSpaceMessage, ismobile, hasError, errorMessage, onTrackForPlaceRequested, challengeMap, spinnerModal, onSpinnerRequested, isStandalone }
+    return { name, profileComplete, notCompleteMessage, completeMessage, visits, onError, onShowResultClick, onRouteSelectionRequested, onShowProfileClick, onProfileUpdated, resultsModal, routeSelectionModal, profileModal, buttonText, buttonProfileText, buttonProfileTextAlt, createHSpaceMessage, createHSpaceMessageMobile, createWSpaceMessage, ismobile, hasError, errorMessage, onTrackForPlaceRequested, challengeMap, spinnerModal, onSpinnerRequested, isStandalone, onRoutesRequested }
   }
 }
 </script>

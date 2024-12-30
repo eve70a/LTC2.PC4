@@ -3,5 +3,6 @@
     public class MainClientSettings
     {
         public string ProfileServiceBaseUrl { get; set; }
+        public string RouteServiceBaseUrl { get; set; }
     }
 }

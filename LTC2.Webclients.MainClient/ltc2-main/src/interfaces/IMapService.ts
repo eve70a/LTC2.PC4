@@ -8,4 +8,8 @@ export interface IMapService {
 
     getPlaceName(placeId: string): string;
     getPlaceCount(): number;
+
+    getGroupedNotCheckedPlaces(maxChars: number, checked: string[]): string[];
+    getGroupedPlaces(maxChars: number): string[];
+    getPlaces(): string[];
 }

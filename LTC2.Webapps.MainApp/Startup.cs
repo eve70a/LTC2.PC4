@@ -4,6 +4,7 @@ using LTC2.Shared.BaseMessages.Services;
 using LTC2.Shared.Messaging.Implementations.FileBasedBroker.Extensions;
 using LTC2.Shared.Models.Settings;
 using LTC2.Shared.Repositories.Interfaces;
+using LTC2.Shared.Repositories.Mapdefinitions;
 using LTC2.Shared.Repositories.Repositories;
 using LTC2.Shared.Secrets.Interfaces;
 using LTC2.Shared.Secrets.Vaults;
@@ -74,6 +75,11 @@ namespace LTC2.Webapps.MainApp
             services.AddSingleton<IIntermediateResultsRepository, IntermediateResultsRepository>();
             services.AddSingleton<IInternalProfileRepository, InternalProfileRepository>();
             services.AddSingleton<IBaseTranslationService, BaseTranslationService>();
+
+            // change to other type when implementing a server based implementation (SqlServer, Elastic or in memory)
+            services.AddSingleton<IMapRepository, SpatiaLiteMapRepository>();
+            services.AddSingleton<IPlacesRepository, PlacesRepository>();
+            services.AddSingleton<SpatiaLiteRepository>();
 
             services.AddSingleton<TilesRepository>();
 
