@@ -10,7 +10,7 @@ Zorg voor je begint voor het volgende:
 
 Doorloop de volgende stappen voor het bouwen en starten van de challenge applicatie:
 
-- Stap 1: download deze file: https://whitemill20studios.nl/longtermnlpostcodechallenge/v1.0.11/LTC2.PC4.zip
+- Stap 1: download deze file: https://whitemill20studios.nl/longtermnlpostcodechallenge/v1.2.1/windows/LTC2.PC4.zip
 - Stap 2: unzip deze file naar een folder op je file system
 - Stap 3: open een command line prompt (cmd.exe) en ga naar de folder waar je de zip file hebt uitgepakt
 - Stap 4: hier vind je een subfolder "scripts" en ga vanuit je command line prompt naar deze "scripts" folder
