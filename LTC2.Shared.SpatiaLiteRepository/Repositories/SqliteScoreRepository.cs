@@ -556,6 +556,24 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                                     Track = track.Coordinates
                                 };
 
+                                if (visitDto.lastExternalId != null)
+                                {
+                                    var detailedTrack = TryGetDetailedTrack(athleteId, visitDto.lastExternalId);
+
+                                    if (detailedTrack.Count > 1)
+                                    {
+                                        track.Coordinates = new List<List<double>>();
+
+                                        foreach (var coordinate in detailedTrack)
+                                        {
+                                            var newCoordinate = new List<double>() { coordinate[1], coordinate[0] };
+                                            track.Coordinates.Add(newCoordinate);
+                                        }
+
+                                        visit.Track = track.Coordinates;
+                                    }
+                                }
+
                                 result.VisitedPlacesLastRide.Add(visit.PlaceId, visit);
                             }
 
