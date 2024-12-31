@@ -975,6 +975,7 @@ export class MapHelper {
     }
 
     private initLastRidePlacesLayer(): VectorTileLayer {
+        const score = this._score;
         const scoreLast = this._scoreLast;
         const mapStyleHelper = this._mapStyleHelper;
         const map = this._map;
@@ -984,9 +985,18 @@ export class MapHelper {
             style: function (feature) {
                 const featurePointer = feature.getProperties()["featurePointer"] as string
                 const id = featurePointer.split(":")[0];
-
-                if (scoreLast && scoreLast.some(s => s.id === id)){
-                    return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear, map);
+                if (score && scoreLast && scoreLast.some(s => s.id === id)){  // scoreLast has an element with place id?
+                    const i = score.findIndex(s => s.id === id );
+                    const j = scoreLast.findIndex(s => s.id === id );
+                    if (i >= 0 && j >= 0) {
+                        const date_1st = score[i].date.split(" ")[0];
+                        const date_cur = scoreLast[j].date.split(" ")[0];
+                        if (date_1st < date_cur) {
+                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear, map); // visited before
+                        } else {
+                            return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewCheckedPlace, map); // first visit this ride
+                        }
+                    }
                 }
 
                 return new Style();
