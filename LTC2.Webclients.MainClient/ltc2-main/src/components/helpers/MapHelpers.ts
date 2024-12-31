@@ -89,19 +89,19 @@ export class MapStyleHelper {
     }
 
     private initStyles() {
-        const layerStyle = new Style({
+        const layerStyle = new Style({  // place not visited
             fill: new Fill({
                 color: "rgba(51, 153, 255, 0.2)",
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 1.0              // thick lines for non-visited places
             })
         });
 
-        const layerStyleVisited = new Style({
+        const layerStyleVisited = new Style({   // visited places
             fill: new Fill({
-                color: "rgba(255, 153, 51, 0.65)",
+                color: "rgba(255, 153, 51, 0.35)",      // light orange, 65% transparent
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -126,9 +126,9 @@ export class MapStyleHelper {
             })
         });
 
-        const layerStyleVisitedTrack = new Style({
+        const layerStyleVisitedTrack = new Style({      // visited in active track
             fill: new Fill({
-                color: "rgba(204, 51, 0, 0.7)",
+                color: "rgba(0, 0, 255, 0.15)",          // blue shade (85% transparent) over lower layers
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -169,7 +169,7 @@ export class MapStyleHelper {
 
         const layerStyleCheckedPlace = new Style({
             fill: new Fill({
-                color: "rgba(204, 51, 0, 0.7)",
+                color: "rgba(229, 101, 25, 0.35)",     // medium orange: visited in current year
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -179,7 +179,7 @@ export class MapStyleHelper {
 
         const layerStyleNewCheckedPlace = new Style({
             fill: new Fill({
-                color: "rgba(0, 255, 0, 0.7)",
+                color: "rgba(0, 255, 0, 0.35)",     // bright green: not visited before
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -189,7 +189,7 @@ export class MapStyleHelper {
 
         const layerStyleNewCheckedYearPlace = new Style({
             fill: new Fill({
-                color: "rgba(0, 128, 0, 0.7)",
+                color: "rgba(204, 51, 0, 0.35)",    // dark orange: visited, but not in current year
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -625,12 +625,12 @@ export class MapHelper {
                         const isVisited = score && score.some(v => v.id === id);
                         const isVisitedYear = scoreYear && scoreYear.some(v => v.id === id);
 
-                        if (!isVisited) {
+                        if (!isVisited) {            // not visited at all
                             return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewCheckedPlace, map);
-                        } else if (!isVisitedYear) {
+                        } else if (!isVisitedYear) { // visited but not in current year
                             return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewYearCheckedPlace, map)
                         }
-
+                                                     // visited in current year
                         return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleCheckedPlace, map);
                     }
     
