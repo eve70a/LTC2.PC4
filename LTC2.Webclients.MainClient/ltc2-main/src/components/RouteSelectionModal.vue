@@ -20,7 +20,8 @@
               <div class="pb-0 pt-2 px-2 bg-white dark:bg-gray-900">
                   <div style="margin-left: 35px;" class="mt-1 flex items-center space-x-2">                                                
                     <input type="file" accept=".gpx" class="hidden" id="fileInput" @change="onSelectFile">
-                    <button onclick="document.getElementById('fileInput').click();" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" type="button">{{buttonTextSelectFile}}</button>                    <input type="text" disabled v-model="fileName" ref="inputElement" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-80 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" :placeholder="texthint">                            
+                    <button @click="onSelectFileButtonClick" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600" type="button">{{buttonTextSelectFile}}</button>                    
+                    <input type="text" disabled v-model="fileName" ref="inputElement" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-80 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" :placeholder="texthint">                            
                     <button v-if="isButtonDisabled" disabled class="text-white bg-blue-300 rounded outline-none font-medium rounded-lg text-sm px-5 py-2.5" type="button">{{buttonTextCheckGpx}}</button>
                     <button v-else @click="onSelectGpx" ref="selectFileButton" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">{{buttonTextCheckGpx}}</button>
                   </div>
@@ -86,6 +87,23 @@
     target: HTMLInputElement & EventTarget
   }
 
+  interface FileToUpload {
+    onlyFileName: string;
+    fileName: string;
+  }
+
+  declare global {
+        interface Window {
+        webkit?: {
+            messageHandlers: {
+            [x:string]: {
+                postMessage: (data: string) => void;
+            }
+            }
+        }
+    }
+  }
+
   export default defineComponent({
   
       emits: [ 'error', 'routeRequested' ],
@@ -132,10 +150,37 @@
 
           let modal: Modal;
           let selectedFiles: FileList | undefined;
+          let selectedBypassFile: FileToUpload | undefined;
          
           onMounted(() => {
               modal = new Modal(modalElement?.value);
+
+              document.addEventListener('onFileEvent', function(event) {
+                const fileToUploadJson = (event as CustomEvent).detail['message'];
+
+                var file = JSON.parse(fileToUploadJson) as FileToUpload;
+
+                fileName.value = file.onlyFileName;
+                
+                selectedBypassFile = file;
+                selectedFiles = undefined;
+
+                isButtonDisabled.value = false;
+                isEmpty.value = false;
+
+                nextTick(() => {
+                    selectFileButton.value?.focus();
+                })
+              })
           }) 
+
+          const onSelectFileButtonClick = () => {
+            if (window.webkit) {
+                window.webkit.messageHandlers.webview.postMessage("selectFile");
+            } else {
+                document.getElementById('fileInput')?.click();
+            }
+          }
   
           const showModal = () => {
             isButtonDisabled.value = fileName.value == emptyString;
@@ -217,6 +262,7 @@
                 fileName.value = files[0].name;
 
                 selectedFiles = files;
+                selectedBypassFile = undefined;
 
                 isButtonDisabled.value = false;
                 isEmpty.value = false;
@@ -287,6 +333,52 @@
           }
 
           const onSelectGpx = async () => {
+            if (selectedBypassFile) {
+                return onSelectGpxFromPath();
+            } else {
+                isButtonDisabled.value = true;            
+                isWorking.value = true;
+
+                if (loadRoutesButton?.value) {
+                    loadRoutesButton.value.disabled = true;
+                }
+
+                let files = selectedFiles;
+
+                if (!files?.length) {
+                    return;
+                }
+
+                try {
+                    var route = await _routeCheckerService?.checkGpx(files[0]);
+
+                    if (route && hasPlaces(route)) {
+                        emit('routeRequested', route);
+
+                        hideModal();
+                    }
+                    else {
+                        isEmpty.value = true;
+                    }                        
+                }
+                catch (error) {
+                    console.log("error when selecting track: " + error);
+                                
+                    hideModal();
+
+                    emit('error', error);                     
+                }
+
+                isButtonDisabled.value = false;
+                isWorking.value = false;
+                
+                if (loadRoutesButton?.value) {
+                    loadRoutesButton.value.disabled = false;
+                }   
+            }
+          }
+    
+          const onSelectGpxFromPath = async () => {
             isButtonDisabled.value = true;            
             isWorking.value = true;
 
@@ -294,23 +386,21 @@
                 loadRoutesButton.value.disabled = true;
             }
 
-            let files = selectedFiles;
-
-            if (!files?.length) {
-                return;
-            }
-
             try {
-                var route = await _routeCheckerService?.checkGpx(files[0]);
 
-                if (route && hasPlaces(route)) {
-                    emit('routeRequested', route);
+                if (selectedBypassFile) {
+                    var route = await _routeCheckerService?.checkGpxFromPath(selectedBypassFile?.fileName);
 
-                    hideModal();
+                    if (route && hasPlaces(route)) {
+                        emit('routeRequested', route);
+
+                        hideModal();
+                    }
+                    else {
+                        isEmpty.value = true;
+                    }                      
                 }
-                else {
-                    isEmpty.value = true;
-                }                        
+                      
             }
             catch (error) {
                 console.log("error when selecting track: " + error);
@@ -327,8 +417,8 @@
                 loadRoutesButton.value.disabled = false;
             }
           }
-    
-          return { showModal, hideModal, modalElement, header, tableContainer, texthint, onSelectFile, inputElement, fileName, buttonTextSelectFile, selectFileButton, isButtonDisabled, onSelectGpx, buttonTextCheckGpx, feedBackNoRoutes, feedBackWorking, isEmpty, isWorking, feedBackInstuction, buttonTextLoadStravaRoute, isRoutesLoaded, routesNotYetLoadedText, noRoutesInStravaText, isNoStravaRoutes, loadRoutesButton, onLoadRoutes, isLoadingStravaRoutes, loadingStravaRoutesText, sortedRoutes, loadingStravaRouteText, isStravaRouteLoading, isNoPlaces, noPlacesText, onSelectRoute }
+ 
+          return { showModal, hideModal, modalElement, header, tableContainer, texthint, onSelectFile, inputElement, fileName, buttonTextSelectFile, selectFileButton, isButtonDisabled, onSelectGpx, buttonTextCheckGpx, feedBackNoRoutes, feedBackWorking, isEmpty, isWorking, feedBackInstuction, buttonTextLoadStravaRoute, isRoutesLoaded, routesNotYetLoadedText, noRoutesInStravaText, isNoStravaRoutes, loadRoutesButton, onLoadRoutes, isLoadingStravaRoutes, loadingStravaRoutesText, sortedRoutes, loadingStravaRouteText, isStravaRouteLoading, isNoPlaces, noPlacesText, onSelectRoute, onSelectFileButtonClick }
       }
   })
   

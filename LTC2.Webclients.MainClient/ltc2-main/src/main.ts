@@ -7,6 +7,7 @@ import { gloClientSettings } from './models/ClientSettings'
 import { emptyString } from './models/Constants'
 import { NotAuthorizedException } from './exceptions/NotAuthorizedException'
 import './assets/tailwind.css'
+import './assets/dispatcher.js'
 
 const startUp = new Startup();
 

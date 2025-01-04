@@ -13,6 +13,8 @@ import { Routes } from '../models/Routes';
 import { GetRoutesResponse } from '../models/GetRoutesResponse';
 import { PresentationRoutes } from '../models/PresentationRoutes';
 
+import { Buffer } from "buffer";
+
 import axios, { AxiosError } from "axios";
 
 @injectable()
@@ -40,6 +42,38 @@ export class RouteCheckerService implements IRouteCheckerService {
                 formData.append("file", file);
 
                 const route = await axios.postForm<Routes>(url + '/api/Route/checkgpx', formData, {headers: {'Authorization': `Bearer ${token}`}, timeout: timeout});
+
+                return route.data;
+            } catch(error) {
+                console.log(error);
+
+                if(axios.isAxiosError(error)){
+                    const axiosError = error as AxiosError;
+
+                    if (axiosError.response?.status == 401){
+                        throw new NotAuthorizedException("Missing or expired token.");
+                    }
+                }
+
+                throw error;
+            }
+        } else {
+            throw new NotAuthorizedException("Missing or expired token.");
+        }
+    }
+
+    async checkGpxFromPath(file: string): Promise<Routes | undefined> {
+        const token = await this._profileService?.getToken();
+        
+        if (token) {
+            const settings = await this._settingsService?.getSettings();
+            const url = settings?.routeServiceBaseUrl;
+            const timeout = 3 * (this._clientSetting?.requestTimeout ?? 5000);
+            
+            try {
+                const encodedData = Buffer.from(file).toString('base64');
+
+                const route = await axios.get<Routes>(url + '/api/Route/checkgpxfrompath?file=' + encodedData, {headers: {'Authorization': `Bearer ${token}`}, timeout: timeout});
 
                 return route.data;
             } catch(error) {
