@@ -7,4 +7,6 @@ export interface IRouteCheckerService {
     listRoutes(): Promise<PresentationRoutes | undefined>;
 
     checkRoute(routeId: string): Promise<Routes | undefined>;
+
+    checkGpxFromPath(file: string): Promise<Routes | undefined>;
 }

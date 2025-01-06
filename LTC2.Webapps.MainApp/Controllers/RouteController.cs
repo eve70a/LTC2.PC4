@@ -1,5 +1,4 @@
-﻿using Elasticsearch.Net;
-using LTC2.Shared.ActivityFormats.Gpx.Utils;
+﻿using LTC2.Shared.ActivityFormats.Gpx.Utils;
 using LTC2.Shared.Models.Domain;
 using LTC2.Shared.Repositories.Interfaces;
 using LTC2.Shared.StravaConnector.Exceptions;
@@ -16,6 +15,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace LTC2.Webapps.MainApp.Controllers
@@ -59,6 +60,27 @@ namespace LTC2.Webapps.MainApp.Controllers
 
             return Ok(response);
         }
+        
+        [HttpGet]
+        [Authorize]
+        [Route("checkgpxfrompath")]
+        public IActionResult CheckGpxFromPath([FromQuery] string file)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                var base64EncodedBytes = Convert.FromBase64String(file);
+                var decodedString = Encoding.UTF8.GetString(base64EncodedBytes);
+                
+                var fileName = ReadGpxFile(decodedString);
+                
+
+                var response = CheckGpxFile(fileName);
+
+                return Ok(response);                
+            };
+            
+            return Unauthorized();
+        }        
 
         [HttpGet]
         [Authorize]
@@ -184,6 +206,29 @@ namespace LTC2.Webapps.MainApp.Controllers
             }
         }
 
+        private string ReadGpxFile(string file)
+        {
+            EnsureTempFolderExists();
+
+            CleanOldGpxFiles();
+
+            try
+            {
+                var uniqueId = Guid.NewGuid().ToString();
+                var gpxName = Path.Combine(_appSettings.TempRoutesFolder, $"{uniqueId}.gpx");
+                
+                System.IO.File.Copy(file, gpxName);   
+
+                return gpxName;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error reading gpx file");
+
+                throw;
+            }
+            
+        }
 
         private string ReadGpxFile(IFormFile file)
         {
