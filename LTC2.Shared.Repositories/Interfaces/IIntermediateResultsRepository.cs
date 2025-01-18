@@ -4,13 +4,13 @@ namespace LTC2.Shared.Repositories.Interfaces
 {
     public interface IIntermediateResultsRepository : IBaseRepository
     {
-        public void StoreIntermedidateResult(CalculationResult calculationResult);
+        public void StoreIntermedidateResult(CalculationResult calculationResult, bool multi);
 
-        public void Clear(long athleteId);
+        public void Clear(long athleteId, bool multi);
 
-        public bool HasIntermediateResult(long athleteId);
+        public bool HasIntermediateResult(long athleteId, bool multi);
 
-        public CalculationResult GetIntermediateResult(long athleteId);
+        public CalculationResult GetIntermediateResult(long athleteId, bool multi);
 
     }
 }

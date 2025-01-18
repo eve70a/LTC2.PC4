@@ -57,7 +57,7 @@ namespace LTC2.Webapps.MainApp.Controllers
                     var profile = _tokenUtils.GetProfileFormToken(token);
                     var athleteId = Convert.ToInt64(profile.AthleteId);
 
-                    var score = await _scoreRepository.GetMostRecentResult(athleteId);
+                    var score = await _scoreRepository.GetMostRecentResult(athleteId, IsMultiRequest());
 
                     profile.PlacesInAllTimeScore = score.VisitedPlacesAllTime.Values.Select(p => new ProfileVisit(p, false)).ToList();
                     profile.PlacesInYearScore = score.VisitedPlacesCurrentYear.Values.Select(p => new ProfileVisit(p, false)).ToList();
@@ -87,7 +87,7 @@ namespace LTC2.Webapps.MainApp.Controllers
         [HttpGet]
         [Authorize]
         [Route("intermediateresult")]
-        public IActionResult HasIntermediateResult()
+        public IActionResult HasIntermediateResult([FromQuery] bool multi = false)
         {
             var authHeader = _tokenUtils.GetAuthenticationHeader(HttpContext.Request);
             var token = authHeader?.Parameter;
@@ -99,7 +99,7 @@ namespace LTC2.Webapps.MainApp.Controllers
                     var profile = _tokenUtils.GetProfileFormToken(token);
                     var athleteId = Convert.ToInt64(profile.AthleteId);
 
-                    var hasIntermediateResult = _intermediateResultsRepository.HasIntermediateResult(athleteId);
+                    var hasIntermediateResult = _intermediateResultsRepository.HasIntermediateResult(athleteId, multi);
 
                     return Ok(hasIntermediateResult);
                 }
@@ -126,7 +126,7 @@ namespace LTC2.Webapps.MainApp.Controllers
                     var profile = _tokenUtils.GetProfileFormToken(token);
                     var athleteId = Convert.ToInt64(profile.AthleteId);
 
-                    var track = await _scoreRepository.GetAlltimeTrackForPlace(athleteId, placeId, detailed | _appSettings.ForceDetailed);
+                    var track = await _scoreRepository.GetAlltimeTrackForPlace(athleteId, placeId, detailed | _appSettings.ForceDetailed, IsMultiRequest());
 
                     if (track == null)
                     {
@@ -155,7 +155,7 @@ namespace LTC2.Webapps.MainApp.Controllers
                     var profile = _tokenUtils.GetProfileFormToken(token);
                     var athleteId = Convert.ToInt64(profile.AthleteId);
 
-                    var tracks = await _scoreRepository.GetAlltimeTracksForAllPlaces(athleteId);
+                    var tracks = await _scoreRepository.GetAlltimeTracksForAllPlaces(athleteId, IsMultiRequest());
 
                     if (tracks == null)
                     {
@@ -237,6 +237,20 @@ namespace LTC2.Webapps.MainApp.Controllers
             }
 
             return Unauthorized();
+        }
+
+        private bool IsMultiRequest()
+        {
+            var result = false;
+
+            var multiCookie = HttpContext.Request.Cookies[HomeController.MULTI_COOKIE_NAME];
+
+            if (!string.IsNullOrEmpty(multiCookie))
+            {
+                result = multiCookie == HomeController.MULTI_COOKIE_VALUE;
+            }
+
+            return result;
         }
     }
 }

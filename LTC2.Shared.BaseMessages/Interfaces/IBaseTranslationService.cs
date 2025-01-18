@@ -8,6 +8,8 @@ namespace LTC2.Shared.BaseMessages.Interfaces
 
         public void LoadMessagesForLanguage(string language);
 
+        public void MergeMessagesForLanguage(string extension);
+
         public string GetMessage(string message);
 
         public string GetMessage(string message, List<string> parameters);

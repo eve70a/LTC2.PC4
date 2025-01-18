@@ -34,6 +34,7 @@
             lblStatusRunningUpdates = new Label();
             lblRunningUpdates = new Label();
             grpStartUpdate = new GroupBox();
+            btnSelectSports = new Button();
             chkByPassCache = new CheckBox();
             rdoRefresh = new RadioButton();
             rdoUpdate = new RadioButton();
@@ -95,6 +96,7 @@
             // 
             // grpStartUpdate
             // 
+            grpStartUpdate.Controls.Add(btnSelectSports);
             grpStartUpdate.Controls.Add(chkByPassCache);
             grpStartUpdate.Controls.Add(rdoRefresh);
             grpStartUpdate.Controls.Add(rdoUpdate);
@@ -106,13 +108,24 @@
             grpStartUpdate.TabStop = false;
             grpStartUpdate.Text = "#groupbox.new.update";
             // 
+            // btnSelectSports
+            // 
+            btnSelectSports.Location = new Point(260, 237);
+            btnSelectSports.Name = "btnSelectSports";
+            btnSelectSports.Size = new Size(224, 34);
+            btnSelectSports.TabIndex = 4;
+            btnSelectSports.Text = "#btnSelectSports";
+            btnSelectSports.UseVisualStyleBackColor = true;
+            btnSelectSports.Visible = false;
+            btnSelectSports.Click += btnSelectSports_Click;
+            // 
             // chkByPassCache
             // 
             chkByPassCache.AutoSize = true;
             chkByPassCache.Enabled = false;
             chkByPassCache.Location = new Point(92, 122);
             chkByPassCache.Name = "chkByPassCache";
-            chkByPassCache.Size = new Size(156, 19);
+            chkByPassCache.Size = new Size(155, 19);
             chkByPassCache.TabIndex = 3;
             chkByPassCache.Text = "#checkbox.renew.details";
             chkByPassCache.UseVisualStyleBackColor = true;
@@ -184,5 +197,6 @@
         private RadioButton rdoRefresh;
         private RadioButton rdoUpdate;
         private CheckBox chkByPassCache;
+        private Button btnSelectSports;
     }
 }

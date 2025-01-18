@@ -6,11 +6,14 @@ namespace LTC2.Webapps.MainApp.Models
     {
         private string _tilesFolder;
         private string _tempRoutesFolder;
+
         public string Name { get; set; }
 
         public string AllowedOrigins { get; set; }
 
         public bool ForceDetailed { get; set; }
+        
+        public bool UseRedirectDuringLogin  { get; set; }
 
         public string TilesFolder
         {
@@ -40,7 +43,5 @@ namespace LTC2.Webapps.MainApp.Models
                 _tempRoutesFolder = value;
             }
         }
-
-
     }
 }

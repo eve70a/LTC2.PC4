@@ -1,4 +1,5 @@
 ﻿using Microsoft.Web.WebView2.WinForms;
+using System.IdentityModel.Tokens.Jwt;
 using System.Text.RegularExpressions;
 
 namespace LTC2.Desktopclients.WindowsClient.Services
@@ -27,6 +28,18 @@ namespace LTC2.Desktopclients.WindowsClient.Services
             }
 
             return _token;
+        }
+
+        public async Task<string> GetAthleteIdFromToken()
+        {
+            var token = await Login();
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtSecurityToken = handler.ReadJwtToken(token);
+
+            var athleteId = jwtSecurityToken.Claims.First(claim => claim.Type == "StravaAthleteId").Value;
+
+            return athleteId;
         }
 
     }

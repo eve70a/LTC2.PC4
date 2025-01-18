@@ -6,6 +6,8 @@
         private string _webviewRoot;
         private string _tilesOKFile;
 
+        private string _multiSportFolder;
+
         public string Name { get; set; }
 
         public string WebApp { get; set; }
@@ -77,5 +79,18 @@
                 _logFolders = value;
             }
         }
+
+        public string MultiSportFolder
+        {
+            get
+            {
+                return _multiSportFolder == null ? null : Environment.ExpandEnvironmentVariables(_multiSportFolder);
+            }
+            set
+            {
+                _multiSportFolder = value;
+            }
+        }
+
     }
 }

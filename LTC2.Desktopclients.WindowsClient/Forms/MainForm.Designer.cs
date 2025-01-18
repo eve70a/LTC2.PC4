@@ -159,7 +159,7 @@
             MinimumSize = new Size(1200, 380);
             Name = "MainForm";
             StartPosition = FormStartPosition.CenterScreen;
-            Text = "Long Term NL Postcode Challenge";
+            Text = "#form.mainform";
             FormClosing += MainForm_FormClosing;
             Load += MainForm_Load;
             stsStrip.ResumeLayout(false);

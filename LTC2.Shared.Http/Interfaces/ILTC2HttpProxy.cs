@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LTC2.Shared.Http.Interfaces
 {
@@ -6,6 +7,8 @@ namespace LTC2.Shared.Http.Interfaces
     {
         public Task Update(string token, bool refresh, bool byPassCache, bool isRestore, bool isClear);
 
-        public Task<bool> HasIntermediateResult(string accessToken);
+        public Task UpdateMulti(string token, List<int> types, bool refresh, bool byPassCache, bool isRestore, bool isClear);
+
+        public Task<bool> HasIntermediateResult(string accessToken, bool multi);
     }
 }
