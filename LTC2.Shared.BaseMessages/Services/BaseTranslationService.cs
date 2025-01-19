@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using LTC2.Shared.Utils.Generic;
 
 namespace LTC2.Shared.BaseMessages.Services
 {
@@ -32,6 +33,11 @@ namespace LTC2.Shared.BaseMessages.Services
         public void LoadMessagesForLanguage(string language)
         {
             LoadMessageFromFile(language);
+        }
+
+        public void MergeMessagesForLanguage(string extension)
+        {
+            MergeMessageFromFile(CurrentLanguage, extension);
         }
 
         public string GetMessage(string message)
@@ -76,11 +82,32 @@ namespace LTC2.Shared.BaseMessages.Services
         {
             var processModule = Process.GetCurrentProcess().MainModule;
             var languageFolder = Path.Combine(Path.GetDirectoryName(processModule?.FileName), "Resources");
-
-            var languageFile = Path.Combine(languageFolder, $"messages.{language}.json");
+            var appId = FileUtils.GetConfigFileAddition();
+            
+            var languageFile = Path.Combine(languageFolder, $"messages{appId}.{language}.json");
             var content = File.ReadAllText(languageFile);
 
             _messages = JsonConvert.DeserializeObject<ConcurrentDictionary<string, string>>(content);
+        }
+
+        protected void MergeMessageFromFile(string language, string extension)
+        {
+            var processModule = Process.GetCurrentProcess().MainModule;
+            var languageFolder = Path.Combine(Path.GetDirectoryName(processModule?.FileName), "Resources");
+            var appId = FileUtils.GetConfigFileAddition();
+
+            var languageFile = Path.Combine(languageFolder, $"messages{appId}.{language}.{extension}.json");
+
+            if (File.Exists(languageFile))
+            {
+                var content = File.ReadAllText(languageFile);
+                var messages = JsonConvert.DeserializeObject<ConcurrentDictionary<string, string>>(content);
+
+                foreach (var message in messages)
+                {
+                    _messages.AddOrUpdate(message.Key, message.Value, (key, oldValue) => message.Value);
+                }
+            }
         }
 
     }

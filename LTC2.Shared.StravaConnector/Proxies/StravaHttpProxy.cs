@@ -55,6 +55,8 @@ namespace LTC2.Shared.StravaConnector.Proxies
             var grantTypeParameter = new KeyValuePair<string, string>("grant_type", request.Type == AuthorizeType.RefreshToken ? "refresh_token" : "authorization_code");
             var codeParameter = new KeyValuePair<string, string>(request.Type == AuthorizeType.RefreshToken ? "refresh_token" : "code", request.Code);
 
+            _logger.LogInformation($"Using Strava with clientid {clientIdParameter}");
+            
             parameters.Add(clientIdParameter);
             parameters.Add(clientSecretParameter);
             parameters.Add(codeParameter);
@@ -221,6 +223,12 @@ namespace LTC2.Shared.StravaConnector.Proxies
                     {
                         Routes = routes
                     };
+
+                    foreach (var route in result.Routes)
+                    {
+                        var length = route.Name.Length;
+                        route.Name = length >= 40 ? route.Name.Substring(0, 40) + "..." : route.Name.Substring(0, length);
+                    }
 
                     return result;
                 }

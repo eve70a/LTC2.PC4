@@ -1,4 +1,6 @@
-﻿namespace LTC2.Shared.Models.Domain
+﻿using System.Collections.Generic;
+
+namespace LTC2.Shared.Models.Domain
 {
     public enum CalculationType { bike = 1, multi = 2, foot = 3, all = 4 }
 
@@ -16,6 +18,8 @@
         public bool BypassCache { get; set; }
 
         public CalculationType Type { get; set; }
+
+        public List<int> Types { get; set; }
 
         public string Code { get; set; }
 

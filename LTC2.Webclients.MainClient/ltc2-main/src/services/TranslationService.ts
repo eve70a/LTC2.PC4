@@ -2,7 +2,7 @@ import type { ITranslationService } from '../interfaces/ITranslationService';
 
 import "reflect-metadata";
 import { injectable } from "inversify";
-import { gloClientSettings } from '@/models/ClientSettings';
+import { gloClientSettings } from '../models/ClientSettings';
 
 import { emptyString } from '../models/Constants';
 
@@ -60,6 +60,21 @@ export class TranslationService implements ITranslationService {
         let property: keyof typeof texts;
         for (property in texts) {
             this._texts.set(property, texts[property]);
+        }
+    }
+
+    async mergeText(lang: string, extension: string): Promise<void> {
+        const now = new Date()
+        const url = `./messages/messages.${lang}.${extension}.json?t=` + now.getTime();
+
+        const response = await axios.get(url, { timeout: gloClientSettings.requestTimeout });
+        const texts = response.data;
+
+        if (this._texts) {
+            let property: keyof typeof texts;
+            for (property in texts) {
+                this._texts.set(property, texts[property]);
+            }    
         }
     }
     

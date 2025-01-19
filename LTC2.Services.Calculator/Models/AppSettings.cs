@@ -1,8 +1,23 @@
-﻿namespace LTC2.Services.Calculator.Models
+﻿using System;
+
+namespace LTC2.Services.Calculator.Models
 {
     public class AppSettings
     {
-        public string Name { get; set; }
+        private string _multiSportFolder;
 
+        public string Name { get; set; }
+        
+        public string MultiSportFolder
+        {
+            get
+            {
+                return _multiSportFolder == null ? null : Environment.ExpandEnvironmentVariables(_multiSportFolder);
+            }
+            set
+            {
+                _multiSportFolder = value;
+            }
+        }
     }
 }

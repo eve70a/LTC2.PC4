@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace LTC2.Shared.Utils.Generic
 {
@@ -54,6 +58,53 @@ namespace LTC2.Shared.Utils.Generic
             return file;
         }
 
+        public static string GetAppNameFromModule()
+        {
+            var appId = string.Empty;
+
+            var processModule = Process.GetCurrentProcess().MainModule;
+            
+            if (processModule != null)
+            {
+                var exeName = Path.GetFileName(processModule.FileName);
+                var parts = exeName.Split('.').Reverse();
+                
+                foreach (var part in parts)
+                {
+                    if (part.ToLower() != "exe" && part.ToLower() != "dll" && part.ToLower() != "so" && part.ToLower() != "dylib")
+                    {
+                        appId = $"{part}";
+                        
+                        break;
+                    }
+                }                  
+            }
+
+            return appId;
+        }
+
+        public static string GetConfigFileAddition()
+        {
+            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+            if (isWindows)
+            {
+                return string.Empty;
+            }
+            else
+            {
+                var appName = GetAppNameFromModule();
+                
+                if (!string.IsNullOrEmpty(appName))
+                {
+                    return $".{appName}";
+                }
+                else
+                {
+                    return  string.Empty;
+                }
+            }
+        }
     }
 
 }

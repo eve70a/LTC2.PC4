@@ -34,7 +34,7 @@ namespace LTC2.Shared.Repositories.Repositories
             }
         }
 
-        public void StoreIntermedidateResult(CalculationResult calculationResult)
+        public void StoreIntermedidateResult(CalculationResult calculationResult, bool multi)
         {
             if (_genericSettings.IntermediateResultsFolder != null)
             {
@@ -45,7 +45,7 @@ namespace LTC2.Shared.Repositories.Repositories
                         _isStoring = true;
 
                         var resultAsString = JsonConvert.SerializeObject(calculationResult, Formatting.Indented);
-                        var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(calculationResult.AthleteId));
+                        var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(calculationResult.AthleteId, multi));
 
                         File.WriteAllText(fileName, resultAsString);
                     }
@@ -61,7 +61,7 @@ namespace LTC2.Shared.Repositories.Repositories
             }
         }
 
-        public void Clear(long athleteId)
+        public void Clear(long athleteId, bool multi = false)
         {
             if (_genericSettings.IntermediateResultsFolder != null)
             {
@@ -71,7 +71,7 @@ namespace LTC2.Shared.Repositories.Repositories
                 {
                     try
                     {
-                        var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(athleteId));
+                        var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(athleteId, multi));
 
                         if (File.Exists(fileName))
                         {
@@ -99,11 +99,11 @@ namespace LTC2.Shared.Repositories.Repositories
             }
         }
 
-        public bool HasIntermediateResult(long athleteId)
+        public bool HasIntermediateResult(long athleteId, bool multi)
         {
             if (_genericSettings.IntermediateResultsFolder != null)
             {
-                var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(athleteId));
+                var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(athleteId, multi));
 
                 return File.Exists(fileName);
             }
@@ -111,22 +111,42 @@ namespace LTC2.Shared.Repositories.Repositories
             return false;
         }
 
-        private string GetFilename(long athleteId)
+        private string GetFilename(long athleteId, bool multi)
         {
-            return $"i{athleteId}.json";
+            var multiSuffix = multi ? "-m" : string.Empty;
+            return $"i{athleteId}{multiSuffix}.json";
         }
 
-        public CalculationResult GetIntermediateResult(long athleteId)
+        public CalculationResult GetIntermediateResult(long athleteId, bool multi)
         {
+
             if (_genericSettings.IntermediateResultsFolder != null)
             {
-                var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(athleteId));
+                var fileName = Path.Combine(_genericSettings.IntermediateResultsFolder, GetFilename(athleteId, multi));
+
+                _logger.LogInformation($"Reading intermediate result from {fileName}");
 
                 if (File.Exists(fileName))
                 {
-                    var content = File.ReadAllText(fileName);
+                    try
+                    {
+                        var content = File.ReadAllText(fileName);
 
-                    return JsonConvert.DeserializeObject<CalculationResult>(content);
+                        return JsonConvert.DeserializeObject<CalculationResult>(content);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogWarning(e, $"Unable to read intermediate result: {e.Message}");
+
+                        try
+                        {
+                            File.Delete(fileName);
+                        }
+                        catch (Exception e2)
+                        {
+                            _logger.LogWarning(e2, $"Unable to delete intermediate result after exception: {e2.Message}");
+                        }
+                    }
                 }
             }
 

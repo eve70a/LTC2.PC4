@@ -32,10 +32,11 @@ namespace LTC2.Shared.Repositories.Repositories
 
         }
 
-        public async Task<Visit> GetMostRecentVisit(long athleteId)
+        public async Task<Visit> GetMostRecentVisit(long athleteId, bool multi)
         {
+            var mapNameSuffix = multi ? "M" : string.Empty;
             var dbParameterAthleteId = new DbParameter("@AthleteId", athleteId);
-            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id);
+            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id + mapNameSuffix);
 
             var dbParameters = new List<DbParameter>()
             {
@@ -60,17 +61,18 @@ namespace LTC2.Shared.Repositories.Repositories
             return null;
         }
 
-        public async Task<CalculationResult> GetMostRecentResult(long athleteId)
+        public async Task<CalculationResult> GetMostRecentResult(long athleteId, bool multi)
         {
+            var mapNameSuffix = multi ? "M" : string.Empty;
             var result = new CalculationResult()
             {
                 AthleteId = athleteId
             };
 
-            var athleteTracks = await GetTracks(athleteId);
+            var athleteTracks = await GetTracks(athleteId, multi);
 
             var dbParameterAthleteId = new DbParameter("@AthleteId", athleteId);
-            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id);
+            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id + mapNameSuffix);
 
             var dbParameters = new List<DbParameter>()
             {
@@ -145,7 +147,7 @@ namespace LTC2.Shared.Repositories.Repositories
             return result;
         }
 
-        public async Task<Dictionary<string, Track>> GetTracks(long athleteId)
+        public async Task<Dictionary<string, Track>> GetTracks(long athleteId, bool multi)
         {
             var result = new Dictionary<string, Track>();
 
@@ -176,12 +178,13 @@ namespace LTC2.Shared.Repositories.Repositories
             return result;
         }
 
-        public async Task<List<Track>> GetAlltimeTracksForAllPlaces(long athleteId)
+        public async Task<List<Track>> GetAlltimeTracksForAllPlaces(long athleteId, bool multi)
         {
+            var mapNameSuffix = multi ? "M" : string.Empty;
             var result = new List<Track>();
 
             var dbParameterAthleteId = new DbParameter("@AthleteId", athleteId);
-            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id);
+            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id + mapNameSuffix);
 
             var dbParameters = new List<DbParameter>()
             {
@@ -209,10 +212,11 @@ namespace LTC2.Shared.Repositories.Repositories
             return result;
         }
 
-        public async Task<Track> GetAlltimeTrackForPlace(long athleteId, string placeId, bool detailed)
+        public async Task<Track> GetAlltimeTrackForPlace(long athleteId, string placeId, bool detailed, bool multi)
         {
+            var mapNameSuffix = multi ? "M" : string.Empty;
             var dbParameterAthleteId = new DbParameter("@AthleteId", athleteId);
-            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id);
+            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id + mapNameSuffix);
             var dbParameterPlace = new DbParameter("@Place", placeId);
 
             var dbParameters = new List<DbParameter>()
@@ -242,13 +246,14 @@ namespace LTC2.Shared.Repositories.Repositories
             return null;
         }
 
-        public async Task StoreScores(bool isRefresh, CalculationResult calculationResult)
+        public async Task StoreScores(bool isRefresh, CalculationResult calculationResult, bool multi)
         {
+            var mapNameSuffix = multi ? "M" : string.Empty;
             var dataTableAlltime = CreateVisitsDataTable();
 
             foreach (var visit in calculationResult.UpdatedPlacesAllTime)
             {
-                AddToVisitDataTable(dataTableAlltime, calculationResult.AthleteId, visit);
+                AddToVisitDataTable(dataTableAlltime, calculationResult.AthleteId, visit, mapNameSuffix);
             }
 
             var dbParameterAllTime = new DbParameter("@Scores", dataTableAlltime);
@@ -262,7 +267,7 @@ namespace LTC2.Shared.Repositories.Repositories
 
             foreach (var visit in calculationResult.UpdatedPlacesCurrentYear)
             {
-                AddToVisitDataTable(dataTableCurrentYear, calculationResult.AthleteId, visit);
+                AddToVisitDataTable(dataTableCurrentYear, calculationResult.AthleteId, visit, mapNameSuffix);
             }
 
             var dbParameterCurrentYear = new DbParameter("@Scores", dataTableCurrentYear);
@@ -276,7 +281,7 @@ namespace LTC2.Shared.Repositories.Repositories
 
             foreach (var visit in calculationResult.UpdatedPlacesLastRide)
             {
-                AddToVisitDataTable(dataTableLastRide, calculationResult.AthleteId, visit);
+                AddToVisitDataTable(dataTableLastRide, calculationResult.AthleteId, visit, mapNameSuffix);
             }
 
             var dbParameterLastRide = new DbParameter("@Scores", dataTableLastRide);
@@ -287,7 +292,7 @@ namespace LTC2.Shared.Repositories.Repositories
             };
 
             var dbParameterAthleteId = new DbParameter("@AthleteId", calculationResult.AthleteId);
-            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id);
+            var dbParameterMapName = new DbParameter("@MapName", _genericSettings.Id + mapNameSuffix);
 
 
             var dbParametersAthleteId = new List<DbParameter>()
@@ -369,12 +374,12 @@ namespace LTC2.Shared.Repositories.Repositories
         private readonly string ColumnDistance = "Distance";
         private readonly string ColumnPlaces = "Places";
 
-        private void AddToVisitDataTable(DataTable dataTable, long athleteId, Visit visit)
+        private void AddToVisitDataTable(DataTable dataTable, long athleteId, Visit visit, string mapNameSuffix)
         {
             var row = dataTable.NewRow();
 
             row[ColumnExternalId] = visit.ExternalId ?? string.Empty;
-            row[ColumnMapName] = _genericSettings.Id;
+            row[ColumnMapName] = _genericSettings.Id + mapNameSuffix;
             row[ColumnAthleteId] = athleteId;
             row[ColumnDate] = visit.VisitedOn;
             row[ColumnPlaceId] = visit.PlaceId;

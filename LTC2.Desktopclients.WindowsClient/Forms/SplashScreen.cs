@@ -11,6 +11,7 @@ namespace LTC2.Desktopclients.WindowsClient
     {
         private readonly StatusNotifier _statusNotifier;
         private readonly ITranslationService _translationService;
+        private readonly MultiSportManager _multiSportManager;
 
         private bool _started;
         private bool _startViewer;
@@ -24,6 +25,7 @@ namespace LTC2.Desktopclients.WindowsClient
         public SplashScreen(
             StatusNotifier statusNotifier,
             ITranslationService translationService,
+            MultiSportManager multiSportManager,
             AppSettings appSettings)
         {
             InitializeComponent();
@@ -32,6 +34,7 @@ namespace LTC2.Desktopclients.WindowsClient
 
             _statusNotifier.OnStatusNotification += OnStatusNotification;
             _translationService = translationService;
+            _multiSportManager = multiSportManager;
 
             _translationService.LoadMessagesForForm(this);
 
@@ -41,6 +44,8 @@ namespace LTC2.Desktopclients.WindowsClient
         public void OpenFromMainForm(MainForm mainForm)
         {
             _mainForm = mainForm;
+
+            chkMultiSport.Checked = _multiSportManager.IsMultiSportDefault;
 
             ShowDialog();
         }
@@ -129,6 +134,14 @@ namespace LTC2.Desktopclients.WindowsClient
         private async void btnStart_Click(object sender, EventArgs e)
         {
             _statusNotifier.OnStatusNotification -= OnStatusNotification;
+
+            _multiSportManager.WriteDefaults(chkMultiSport.Checked);
+            _multiSportManager.RunInMultiSportMode = chkMultiSport.Checked;
+
+            if (_multiSportManager.RunInMultiSportMode)
+            {
+                _translationService.MergeMessagesForLanguage("multi");
+            }
 
             Close();
 

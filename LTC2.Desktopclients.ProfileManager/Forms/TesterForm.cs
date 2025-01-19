@@ -13,8 +13,6 @@ namespace LTC2.Desktopclients.ProfileManager.Forms
         public string AthleteId { get; set; }
 
 
-        private Form _callingForm;
-
         private readonly AppSettings _appSettings;
         private readonly ITranslationService _translationService;
 
@@ -32,8 +30,6 @@ namespace LTC2.Desktopclients.ProfileManager.Forms
 
         private async void TesterForm_VisibleChanged(object sender, EventArgs e)
         {
-            _callingForm = sender as Form;
-
             if (Visible)
             {
                 IsTestSuccessFull = false;

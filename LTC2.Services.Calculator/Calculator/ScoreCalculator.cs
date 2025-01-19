@@ -11,8 +11,10 @@ using LTC2.Shared.StravaConnector.Models;
 using LTC2.Shared.StravaConnector.Models.Requests;
 using LTC2.Shared.Utils.Utils;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -27,6 +29,7 @@ namespace LTC2.Services.Calculator.Calculator
         private readonly IScoresRepository _scoresRepository;
         private readonly StatusNotifier _statusNotifier;
         private readonly IIntermediateResultsRepository _intermediateResultsRepository;
+        private readonly AppSettings _appSettings;
 
         private readonly long _maxDuration = 100 * 60 * 60;
         private readonly long _maxDistance = 1600000;
@@ -34,6 +37,7 @@ namespace LTC2.Services.Calculator.Calculator
         private readonly List<StravaActivityType> _activityTypes = new List<StravaActivityType>();
 
         public ScoreCalculator(
+                AppSettings appSettings,
                 GenericSettings genericSettings,
                 CalculatorSettings calculatorSettings,
                 IMapRepository mapRepository,
@@ -51,6 +55,7 @@ namespace LTC2.Services.Calculator.Calculator
             _intermediateResultsRepository = intermediateResultsRepository;
             _stravaConnector = stravaConnector;
             _statusNotifier = statusNotifier;
+            _appSettings = appSettings;
 
             ParseActivityTypes();
         }
@@ -86,6 +91,7 @@ namespace LTC2.Services.Calculator.Calculator
 
             var dayLimitDetect = false;
             var stravaSession = await GetSession(job);
+            var isMulti = job.Type == CalculationType.multi;
 
             var request = new GetActivitiesRequest()
             {
@@ -99,9 +105,16 @@ namespace LTC2.Services.Calculator.Calculator
                 IsRefresh = job.Refresh
             };
 
+            if (isMulti && IsTypeSwitch(job.AthleteId, job.Types))
+            {
+                calculationResult.IsRefresh = true;
+                job.Refresh = true;
+            }
+
+
             if (!job.Refresh && !job.IsRestoreInterMediate && !job.IsClearInterMediate)
             {
-                var mostrecentVisitResult = await _scoresRepository.GetMostRecentVisit(job.AthleteId);
+                var mostrecentVisitResult = await _scoresRepository.GetMostRecentVisit(job.AthleteId, isMulti);
 
                 if (mostrecentVisitResult != null)
                 {
@@ -109,24 +122,27 @@ namespace LTC2.Services.Calculator.Calculator
 
                     _logger.LogInformation($"Getting recent activities only, form {request.After} and onwards.");
 
-                    calculationResult = await _scoresRepository.GetMostRecentResult(job.AthleteId);
+                    calculationResult = await _scoresRepository.GetMostRecentResult(job.AthleteId, isMulti);
 
                     _logger.LogInformation($"Current result has {calculationResult.VisitedPlacesAllTime.Count} entries.");
                 }
             }
+
+            calculationResult.Type = job.Type;
+            calculationResult.Types = job.Types;
 
             var start = DateTime.UtcNow;
 
 
             if (job.IsRestoreInterMediate)
             {
-                calculationResult = _intermediateResultsRepository.GetIntermediateResult(job.AthleteId);
+                calculationResult = _intermediateResultsRepository.GetIntermediateResult(job.AthleteId, isMulti);
 
                 job.Refresh = calculationResult.IsRefresh;
             }
             else
             {
-                _intermediateResultsRepository.Clear(job.AthleteId);
+                _intermediateResultsRepository.Clear(job.AthleteId, isMulti);
             }
 
             if (!job.IsRestoreInterMediate && !job.IsClearInterMediate)
@@ -176,9 +192,15 @@ namespace LTC2.Services.Calculator.Calculator
 
             if (!job.IsClearInterMediate)
             {
-                await _scoresRepository.StoreScores(job.Refresh, calculationResult);
+                await _scoresRepository.StoreScores(job.Refresh, calculationResult, isMulti);
 
-                _intermediateResultsRepository.Clear(job.AthleteId);
+                _intermediateResultsRepository.Clear(job.AthleteId, isMulti);
+
+                if(calculationResult.Type == CalculationType.multi)
+                {
+                    var file = Path.Combine(_appSettings.MultiSportFolder, $"{job.AthleteId}.json");
+                    File.WriteAllText(file, JsonConvert.SerializeObject(calculationResult.Types));
+                }
 
                 if (dayLimitDetect)
                 {
@@ -195,7 +217,7 @@ namespace LTC2.Services.Calculator.Calculator
         {
             _statusNotifier.SetNotification(StatusMessage.STATUS_WAIT, waitUntil.ToString());
 
-            _intermediateResultsRepository.StoreIntermedidateResult(subject);
+            _intermediateResultsRepository.StoreIntermedidateResult(subject, subject.Type == CalculationType.multi);
         }
 
         public void OnCheckActivity(StravaActivity activity, List<List<double>> track, CalculationResult subject)
@@ -321,7 +343,14 @@ namespace LTC2.Services.Calculator.Calculator
             var notExcedingDistance = whiteListed || activity.Distance <= _maxDistance;
             var blackListed = IsBlackListedActivity(activity.Id);
 
-            var result = _activityTypes.Contains(activity.Type) && !activity.IsManual && notExcedingDistance && notExcedingElapsedTime && !blackListed;
+            var allowedActivities = _activityTypes;
+
+            if (subject.Type == CalculationType.multi)
+            {
+                allowedActivities = subject.Types.Select(t => (StravaActivityType)t).ToList();
+            }
+
+            var result = allowedActivities.Contains(activity.Type) && !activity.IsManual && notExcedingDistance && notExcedingElapsedTime && !blackListed;
 
             NotifyActivityCheck(activity);
 
@@ -331,14 +360,14 @@ namespace LTC2.Services.Calculator.Calculator
 
                 if (_calculatorSettings.IntermediateResultAfterCount > 0 && subject.ProgressCount % _calculatorSettings.IntermediateResultAfterCount == 0)
                 {
-                    _intermediateResultsRepository.StoreIntermedidateResult(subject);
+                    _intermediateResultsRepository.StoreIntermedidateResult(subject, subject.Type == CalculationType.multi);
                 }
 
                 var places = _mapRepository.PreCheckTrack(track);
 
                 var newPlacesCount = places.Where(p => IsPlaceRelevant(activity, p, subject)).Count();
 
-                if (places.Count > 0 && (subject.LastRideSample == null || activity.DateTimeStart > subject.LastRideSample.VisitedOn))
+                if (places.Count > 0 && allowedActivities.Contains(activity.Type) && (subject.LastRideSample == null || activity.DateTimeStart > subject.LastRideSample.VisitedOn))
                 {
                     var visit = new Visit();
 
@@ -391,6 +420,53 @@ namespace LTC2.Services.Calculator.Calculator
             {
                 return await _stravaConnector.GetSession(job.AthleteId);
             }
+        }
+
+        private List<int> GetCurrentTypes(long athleteId)
+        {
+            var file = Path.Combine(_appSettings.MultiSportFolder, $"{athleteId}.json");
+
+            if (File.Exists(file))
+            {
+                try
+                {
+                    var content = File.ReadAllText(file);
+
+                    return JsonConvert.DeserializeObject<List<int>>(content);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, $"Unable to read activity types for athlete: {athleteId}");
+                }
+                
+            }
+
+            return new List<int>();
+        }
+
+        private bool IsTypeSwitch(long athleteId, List<int> jobTypes)
+        {
+            var currentTypes = GetCurrentTypes(athleteId);
+
+            foreach (var type in jobTypes)
+            {
+                if (!currentTypes.Contains(type))
+                {
+                    Console.WriteLine("TRUE");
+                    return true;
+                }
+            }
+
+            foreach (var type in currentTypes)
+            {
+                if (!jobTypes.Contains(type))
+                {
+                    Console.WriteLine("TRUE");
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

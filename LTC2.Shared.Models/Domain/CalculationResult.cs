@@ -12,6 +12,10 @@ namespace LTC2.Shared.Models.Domain
 
         public int ProgressCount { get; set; }
 
+        public CalculationType Type { get; set; }
+
+        public List<int> Types { get; set; }
+
         public Dictionary<string, Visit> VisitedPlacesAllTime { get; set; } = new Dictionary<string, Visit>();
 
         public List<Visit> UpdatedPlacesAllTime

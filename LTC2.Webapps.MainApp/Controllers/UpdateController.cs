@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 
 namespace LTC2.Webapps.MainApp.Controllers
 {
@@ -38,7 +39,7 @@ namespace LTC2.Webapps.MainApp.Controllers
             {
                 if (_tokenUtils.ValidateToken(token))
                 {
-                    PostUpdateMessage(_tokenUtils.GetProfileFormToken(token).AthleteId, refresh, bypassCache, isRestore, isClear);
+                    PostUpdateMessage(_tokenUtils.GetProfileFormToken(token).AthleteId, refresh, bypassCache, isRestore, isClear, null);
 
                     return Ok();
                 }
@@ -47,7 +48,28 @@ namespace LTC2.Webapps.MainApp.Controllers
             return Unauthorized();
         }
 
-        private void PostUpdateMessage(string athleteIdAsString, bool refresh, bool bypassCache, bool isRestore, bool isClear)
+        [HttpPost]
+        [Authorize]
+        [Route("updatemulti")]
+        public IActionResult UpdateMulti([FromQuery] bool refresh, [FromBody] List<int> types, [FromQuery] bool bypassCache = false, [FromQuery] bool isRestore = false, [FromQuery] bool isClear = false)
+        {
+            var authHeader = _tokenUtils.GetAuthenticationHeader(HttpContext.Request);
+            var token = authHeader?.Parameter;
+
+            if (token != null)
+            {
+                if (_tokenUtils.ValidateToken(token))
+                {
+                    PostUpdateMessage(_tokenUtils.GetProfileFormToken(token).AthleteId, refresh, bypassCache, isRestore, isClear, types);
+
+                    return Ok();
+                }
+            }
+
+            return Unauthorized();
+        }
+
+        private void PostUpdateMessage(string athleteIdAsString, bool refresh, bool bypassCache, bool isRestore, bool isClear, List<int> types)
         {
             var broker = _brokerFactory.CreateBroker();
             var connection = broker.Connect(_calculatorSettings.BrokerConnection);
@@ -66,7 +88,9 @@ namespace LTC2.Webapps.MainApp.Controllers
                 Refresh = refresh,
                 BypassCache = bypassCache,
                 IsRestoreInterMediate = isRestore,
-                IsClearInterMediate = isClear
+                IsClearInterMediate = isClear,
+                Types = types,
+                Type = types == null ? CalculationType.bike : CalculationType.multi
             };
 
             var payLoad = JsonConvert.SerializeObject(calculationJob);

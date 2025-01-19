@@ -256,6 +256,33 @@ namespace LTC2.Shared.Http.Proxies
             }
         }
 
+        protected async Task ExecutePostRequest<TRequest>(string uri, TRequest request, AuthenticationHeaderValue authHeader = null)
+            where TRequest : class
+        {
+            var requestBody = JsonConvert.SerializeObject(request);
+            var requestContent = new StringContent(requestBody);
+            requestContent.Headers.ContentType = ApplicationJsonMediaTypeHeaderValue;
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, uri);
+            requestMessage.Headers.Accept.Add(ApplicationJsonMediaTypeWithQualityHeaderValue);
+            requestMessage.Content = requestContent;
+
+            if (authHeader != null)
+            {
+                requestMessage.Headers.Authorization = authHeader;
+            }
+
+            var response = await _httpClient.SendAsync(requestMessage);
+            var responseContent = response.Content;
+            var responseBody = await responseContent.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpProxyException((int)response.StatusCode);
+            }
+
+        }
+
 
         protected async Task<TResponse> ExecuteFormUrlEncodedRequest<TResponse>(string uri, Dictionary<string, string> headers, IEnumerable<KeyValuePair<string, string>> requestData)
             where TResponse : class
