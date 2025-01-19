@@ -48,6 +48,7 @@ namespace LTC2.Webapps.MainApp.Controllers
             _profileManager = profileManager;
             _baseTranslationService = baseTranslationService;
             _appSettings = appSettings;
+            _logger = logger;
         }
 
         public IActionResult Index(bool forceLogout, string profile, string language, bool multi)
