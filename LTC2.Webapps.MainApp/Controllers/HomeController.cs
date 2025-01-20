@@ -183,6 +183,15 @@ namespace LTC2.Webapps.MainApp.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting session from Strava");
+
+                if (code == null)
+                {
+                    _logger.LogError("Error getting session from Strava: no code!");
+
+                    return Unauthorized();
+                }
+
                 var session = await _stravaConnector.GetSession(code);
 
                 if (session == null || session.AthleteId == -1)
