@@ -285,6 +285,7 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
+            _updateActivities.AdaptFormToMultiSport();
             _updateActivities.ShowDialog();
         }
 
