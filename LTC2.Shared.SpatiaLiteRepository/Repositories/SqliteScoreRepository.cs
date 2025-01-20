@@ -328,10 +328,11 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                         if (detailed)
                         {
                             var detailedTrack = TryGetDetailedTrack(athleteId, queryResult[0].tracExternalId);
-                            track.Coordinates = new List<List<double>>();
 
                             if (detailedTrack.Count > 1)
                             {
+                                track.Coordinates = new List<List<double>>();
+
                                 foreach (var coordinate in detailedTrack)
                                 {
                                     var newCoordinate = new List<double>() { coordinate[1], coordinate[0] };
