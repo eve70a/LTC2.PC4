@@ -169,29 +169,32 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
 
                 if (_multiSportManager.RunInMultiSportMode)
                 {
-                    if (!_formAdaptedToMultiSport)
-                    {
-                        btnSelectSports.Visible = true;
-
-                        var _userDefaultScreenDPI = 96.0f;
-                        using (var g = CreateGraphics())
-                        {
-                            var yDPI = g.DpiY;
-                            var dpiScale = yDPI / _userDefaultScreenDPI;
-
-                            Height += Convert.ToInt32(30.0 * dpiScale);
-                            grpStartUpdate.Height += Convert.ToInt32(35.0 * dpiScale);
-                        }
-
-                        _translationService.LoadMessagesForForm(this);
-
-                        _formAdaptedToMultiSport = true;
-                    }
+                    AdaptFormToMultiSport();
 
                     btnSelectSports.Enabled = true;
                 }
             }
 
+        }
+
+        public void AdaptFormToMultiSport()
+        {
+            if (!_formAdaptedToMultiSport && _multiSportManager.RunInMultiSportMode)
+            {
+                btnSelectSports.Visible = true;
+                var _userDefaultScreenDPI = 96.0f;
+                using (var g = CreateGraphics())
+                {
+                    var yDPI = g.DpiY;
+                    var dpiScale = yDPI / _userDefaultScreenDPI;
+                    Height += Convert.ToInt32(30.0 * dpiScale);
+                    grpStartUpdate.Height += Convert.ToInt32(35.0 * dpiScale);
+                }
+                
+                _translationService.LoadMessagesForForm(this);
+                
+                _formAdaptedToMultiSport = true;
+            }
         }
 
         private delegate void UpdateStatusDelegate(StatusMessage status);
