@@ -292,18 +292,22 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             DbConnectionString = _genericSettings.DatabaseConnectionSqliteString;
         }
 
-        public async Task<Track> GetAlltimeTrackForPlace(long athleteId, string placeId, bool detailed)
+        public async Task<Track> GetAlltimeTrackForPlace(long athleteId, string placeId, bool detailed, bool multi)
         {
-            using (var connection = new SqliteConnection(DbConnectionString))
+            var suffix = multi ? ".multi" : string.Empty;
+
+            using (var connection = new SqliteConnection(GetConnectionString(multi)))
             {
                 await connection.OpenAsync();
+
+                var mapNameSuffix = multi ? "M" : string.Empty;
 
                 try
                 {
                     var parameters = new Dictionary<string, object>()
                     {
                         { "@AthleteId", athleteId },
-                        { "@MapName", _genericSettings.Id },
+                        { "@MapName", _genericSettings.Id + mapNameSuffix },
                         { "@Place", placeId }
                     };
 
@@ -324,10 +328,11 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                         if (detailed)
                         {
                             var detailedTrack = TryGetDetailedTrack(athleteId, queryResult[0].tracExternalId);
-                            track.Coordinates = new List<List<double>>();
 
                             if (detailedTrack.Count > 1)
                             {
+                                track.Coordinates = new List<List<double>>();
+
                                 foreach (var coordinate in detailedTrack)
                                 {
                                     var newCoordinate = new List<double>() { coordinate[1], coordinate[0] };
@@ -421,20 +426,22 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             return new List<List<double>>();
         }
 
-        public async Task<List<Track>> GetAlltimeTracksForAllPlaces(long athleteId)
+        public async Task<List<Track>> GetAlltimeTracksForAllPlaces(long athleteId, bool multi)
         {
             var result = new List<Track>();
 
-            using (var connection = new SqliteConnection(DbConnectionString))
+            using (var connection = new SqliteConnection(GetConnectionString(multi)))
             {
                 await connection.OpenAsync();
+
+                var mapNameSuffix = multi ? "M" : string.Empty;
 
                 try
                 {
                     var parameters = new Dictionary<string, object>()
                     {
                         { "@AthleteId", athleteId },
-                        { "@MapName", _genericSettings.Id }
+                        { "@MapName", _genericSettings.Id + mapNameSuffix }
                     };
 
                     var queryResult = await GetRecordsAsync<DtoTrack>(connection, _querySelectAlltimeTracksForAllPlaces, new RowMappers.DtoTrackRowMapper(), parameters);
@@ -469,25 +476,27 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             return result;
         }
 
-        public async Task<CalculationResult> GetMostRecentResult(long athleteId)
+        public async Task<CalculationResult> GetMostRecentResult(long athleteId, bool multi)
         {
             var result = new CalculationResult()
             {
                 AthleteId = athleteId
             };
 
-            using (var connection = new SqliteConnection(DbConnectionString))
+            using (var connection = new SqliteConnection(GetConnectionString(multi)))
             {
                 await connection.OpenAsync();
 
+                var mapNameSuffix = multi ? "M" : string.Empty;
+
                 try
                 {
-                    var athleteTracks = await GetTracks(athleteId);
+                    var athleteTracks = await GetTracks(athleteId, multi);
 
                     var parameters = new Dictionary<string, object>()
                     {
                         { "@AthleteId", athleteId },
-                        { "@MapName", _genericSettings.Id }
+                        { "@MapName", _genericSettings.Id + mapNameSuffix }
                     };
 
                     var queryResultAlltime = await GetRecordsAsync<DtoAllTimeScore>(connection, _querySelectAllTimeScores, new RowMappers.DtoAllTimeScoreRowMapper(), parameters);
@@ -597,18 +606,20 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             return result;
         }
 
-        public async Task<Visit> GetMostRecentVisit(long athleteId)
+        public async Task<Visit> GetMostRecentVisit(long athleteId, bool multi)
         {
-            using (var connection = new SqliteConnection(DbConnectionString))
+            using (var connection = new SqliteConnection(GetConnectionString(multi)))
             {
                 await connection.OpenAsync();
+
+                var mapNameSuffix = multi ? "M" : string.Empty;
 
                 try
                 {
                     var parameters = new Dictionary<string, object>()
                     {
                         { "@AthleteId", athleteId },
-                        { "@MapName", _genericSettings.Id }
+                        { "@MapName", _genericSettings.Id + mapNameSuffix}
                     };
 
                     var queryResult = await GetRecordsAsync<DtoLastRideScore>(connection, _querySelectMostRecentVisit, new RowMappers.DtoLastRideScoreRowMapper(), parameters);
@@ -640,11 +651,11 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             return null;
         }
 
-        public async Task<Dictionary<string, Track>> GetTracks(long athleteId)
+        public async Task<Dictionary<string, Track>> GetTracks(long athleteId, bool multi)
         {
             var result = new Dictionary<string, Track>();
 
-            using (var connection = new SqliteConnection(DbConnectionString))
+            using (var connection = new SqliteConnection(GetConnectionString(multi)))
             {
                 await connection.OpenAsync();
 
@@ -690,8 +701,12 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
 
         public override void Open()
         {
-            var fileName = GetFileNameFromConnectionString();
+            EnsureDatabaseFile(GetFileNameFromConnectionString(false));
+            EnsureDatabaseFile(GetFileNameFromConnectionString(true));
+        }
 
+        private void EnsureDatabaseFile(string fileName)
+        {
             try
             {
                 if (fileName != string.Empty)
@@ -719,9 +734,9 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             }
         }
 
-        private string GetFileNameFromConnectionString()
+        private string GetFileNameFromConnectionString(bool multi)
         {
-            var connectionStringParts = DbConnectionString.Split(';');
+            var connectionStringParts = GetConnectionString(multi).Split(';');
 
             foreach (var part in connectionStringParts)
             {
@@ -736,13 +751,40 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
             return string.Empty;
         }
 
-        public async Task StoreScores(bool isRefresh, CalculationResult calculationResult)
+        private string GetConnectionString(bool multi)
         {
-            using (var connection = new SqliteConnection(DbConnectionString))
+            return multi ? GetMultiSportConnectionString() : DbConnectionString;
+        }
+
+        private string GetMultiSportConnectionString()
+        {
+            var connectionStringParts = DbConnectionString.Split(';');
+            var result = string.Empty;
+
+            foreach (var part in connectionStringParts)
+            {
+                if (part.ToLower().StartsWith("data source="))
+                {
+                    result += (part.Replace(".sqlite", ".multi.sqlite") + ";");
+                }
+                else
+                {
+                    result += (part + ";");
+                }
+            }
+
+            return result.Trim(';');
+        }
+
+        public async Task StoreScores(bool isRefresh, CalculationResult calculationResult, bool multi)
+        {
+            using (var connection = new SqliteConnection(GetConnectionString(multi)))
             {
                 await connection.OpenAsync();
 
                 var transaction = (SqliteTransaction)await connection.BeginTransactionAsync();
+
+                var mapNameSuffix = multi ? "M" : string.Empty;
 
                 try
                 {
@@ -750,7 +792,7 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                     var clearParameters = new Dictionary<string, object>()
                     {
                         { "@AthleteId", calculationResult.AthleteId },
-                        { "@MapName", _genericSettings.Id }
+                        { "@MapName", _genericSettings.Id + mapNameSuffix}
                     };
 
                     if (isRefresh || calculationResult.VisitedPlacesAllTime.Count == 0)
@@ -772,7 +814,7 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                     {
                         var upsertParameters = new Dictionary<string, object>()
                         {
-                            { "@MapName", _genericSettings.Id },
+                            { "@MapName", _genericSettings.Id + mapNameSuffix},
                             { "@ExternalId", visit.ExternalId ?? string.Empty },
                             { "@AthleteId", calculationResult.AthleteId },
                             { "@Date", visit .VisitedOn.ToString("yyyy-MM-dd hh:mm.ss")},
@@ -786,7 +828,7 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                     {
                         var upsertParameters = new Dictionary<string, object>()
                         {
-                            { "@MapName", _genericSettings.Id },
+                            { "@MapName", _genericSettings.Id + mapNameSuffix },
                             { "@ExternalId", visit.ExternalId ?? string.Empty },
                             { "@AthleteId", calculationResult.AthleteId },
                             { "@Date", visit .VisitedOn.ToString("yyyy-MM-dd hh:mm.ss")},
@@ -800,7 +842,7 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                     {
                         var insertParameters = new Dictionary<string, object>()
                         {
-                            { "@MapName", _genericSettings.Id },
+                            { "@MapName", _genericSettings.Id + mapNameSuffix },
                             { "@ExternalId", visit.ExternalId ?? string.Empty },
                             { "@AthleteId", calculationResult.AthleteId },
                             { "@Date", visit .VisitedOn.ToString("yyyy-MM-dd hh:mm.ss")},

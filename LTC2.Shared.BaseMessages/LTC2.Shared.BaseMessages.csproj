@@ -10,4 +10,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LTC2.Shared.Utils\LTC2.Shared.Utils.csproj" />
+  </ItemGroup>
+
 </Project>

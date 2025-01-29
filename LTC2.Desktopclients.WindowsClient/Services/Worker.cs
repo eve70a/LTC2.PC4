@@ -24,8 +24,7 @@ namespace LTC2.Desktopclients.WindowsClient.Services
             _logger.LogInformation("Start control panel application");
 
             ExecutePrerequisiteServiceTasks();
-
-
+            
             if (_serviceTasks != null && _serviceTasks.Count() > 0)
             {
                 var mainTask = _serviceTasks.FirstOrDefault(s => s is IMainServiceTask) as IMainServiceTask;

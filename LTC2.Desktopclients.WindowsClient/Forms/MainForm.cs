@@ -15,6 +15,7 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
         private readonly AppSettings _appSettings;
         private readonly ProfileManager _profileManager;
         private readonly ITranslationService _translationService;
+        private readonly MultiSportManager _multiSportManager;
 
         private bool _inFatalMode;
         private bool _isUpdating;
@@ -28,6 +29,7 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
             WebviewConnector webviewConnector,
             ProfileManager profileManager,
             ITranslationService translationService,
+            MultiSportManager multiSportManager,
             AppSettings appSettings)
         {
             InitializeComponent();
@@ -41,6 +43,7 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
             _profileManager = profileManager;
             _appSettings = appSettings;
             _translationService = translationService;
+            _multiSportManager = multiSportManager;
 
             _inFatalMode = false;
 
@@ -129,6 +132,8 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
             {
                 lblUpdateProgress.Text = "";
 
+                _multiSportManager.RefreshCurrentActivityTypes();
+
                 webView.CoreWebView2.Navigate(GetUrl());
             }
             else if (status.Status == StatusMessage.STATUS_LIMIT)
@@ -194,6 +199,11 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
             pnlBar_Resize(sender, e);
 
             _splashScreen.OpenFromMainForm(this);
+
+            if (_multiSportManager.RunInMultiSportMode)
+            {
+                Text = $"MultiSport - {Text}";
+            }
         }
 
         private async Task InitWebview()
@@ -275,6 +285,7 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
+            _updateActivities.AdaptFormToMultiSport();
             _updateActivities.ShowDialog();
         }
 
@@ -290,7 +301,7 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
 
         private string GetUrl()
         {
-            return $"{_appSettings.StartPage}?language={_translationService.CurrentLanguage}";
+            return $"{_appSettings.StartPage}?language={_translationService.CurrentLanguage}&multi={_multiSportManager.RunInMultiSportMode}";
         }
     }
 }

@@ -1,11 +1,13 @@
 {
   "groupbox.start": "Opstarten",
+  "form.mainform": "Long Term NL Postcode Challenge",
   "label.status.route.checker": "Status Route Checker:",
   "label.status.map.manager": "Status Landkaart Manager:",
   "label.status.route.checker.actualstatus": "bepalen profiel...",
   "label.status.map.manage.actualstatus": "bepalen profiel...",
   "button.profile.manager": "Profiel Manager...",
   "button.map.viewer": "Start kaarten viewer...",
+  "chkMultiSport": "Start in MultiSport modus",
 
   "progress.status.start": "wordt gestart...",
 
@@ -48,5 +50,11 @@
   "messagebox.fatal.component.exit": "De %0% is uit de lucht.\n\nDe application kan niet verder werken zonder deze component. Herstart de applicatie.",
   "messagebox.fatal.component.exit.header": "Probleempje...",
   "messagebox.exit.confirm": "Er loopt nog een update. Wil je deze update stoppen?",
-  "messagebox.exit.confirm.header": "Zeker weten?"
+  "messagebox.exit.confirm.header": "Zeker weten?",
+
+  "btnSelectSports": "Kies MultiSport sporten...",
+  "form.selectactivities": "Selecteer je MultiSport sporten",
+  "groupbox.selectactivies": "Vink je sporten aan",
+  "button.selectactvities.ok": "Toepassen",
+  "button.selectactvities.cancel": "Annuleren"
 }

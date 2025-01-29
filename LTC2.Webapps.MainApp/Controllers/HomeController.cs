@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
+using LTC2.Webapps.MainApp.Models;
+using Microsoft.Extensions.Logging;
 
 namespace LTC2.Webapps.MainApp.Controllers
 {
@@ -20,26 +22,36 @@ namespace LTC2.Webapps.MainApp.Controllers
         private readonly IStravaConnector _stravaConnector;
         private readonly ProfileManager _profileManager;
         private readonly IBaseTranslationService _baseTranslationService;
+        private readonly ILogger<HomeController> _logger;
 
         private readonly string _stateCookieName = "state";
         private readonly string _languageCookieName = "language";
         private readonly string _appEntrypoint = "../app/index.html";
+        
+        private readonly AppSettings _appSettings;
+
+        public static string MULTI_COOKIE_NAME = "multi";
+        public static string MULTI_COOKIE_VALUE = "multi";
 
         public HomeController(
             StravaHttpProxySettings stravaHttpProxySettings,
             ProfileManager profileManager,
             TokenUtils tokenUtils,
             IBaseTranslationService baseTranslationService,
-            IStravaConnector stravaConnector)
+            IStravaConnector stravaConnector,
+            ILogger<HomeController> logger,
+            AppSettings appSettings)
         {
             _stravaHttpProxySettings = stravaHttpProxySettings;
             _tokenUtils = tokenUtils;
             _stravaConnector = stravaConnector;
             _profileManager = profileManager;
             _baseTranslationService = baseTranslationService;
+            _appSettings = appSettings;
+            _logger = logger;
         }
 
-        public IActionResult Index(bool forceLogout, string profile, string language)
+        public IActionResult Index(bool forceLogout, string profile, string language, bool multi)
         {
             var state = Guid.NewGuid().ToString();
             var testProfile = false;
@@ -89,6 +101,7 @@ namespace LTC2.Webapps.MainApp.Controllers
 
             HttpContext.Response.Cookies.Append(_stateCookieName, state);
             HttpContext.Response.Cookies.Append(_languageCookieName, language ?? _baseTranslationService.CurrentLanguage);
+            HttpContext.Response.Cookies.Append(MULTI_COOKIE_NAME, multi ? MULTI_COOKIE_VALUE : string.Empty);
 
             ViewBag.AppEntryPoint = _appEntrypoint + $"?t={DateTime.UtcNow.Ticks}";
 
@@ -130,7 +143,6 @@ namespace LTC2.Webapps.MainApp.Controllers
             {
                 return RedirectToAction("Home");
             }
-
         }
 
         private bool CheckScope(string scope)
@@ -171,10 +183,21 @@ namespace LTC2.Webapps.MainApp.Controllers
         {
             try
             {
+                _logger.LogInformation("Getting session from Strava");
+
+                if (code == null)
+                {
+                    _logger.LogError("Error getting session from Strava: no code!");
+
+                    return Unauthorized();
+                }
+
                 var session = await _stravaConnector.GetSession(code);
 
                 if (session == null || session.AthleteId == -1)
                 {
+                    _logger.LogError("Error getting session from Strava");
+
                     return Unauthorized();
                 }
 
@@ -185,14 +208,26 @@ namespace LTC2.Webapps.MainApp.Controllers
                 {
                     var token = _tokenUtils.GenerateToken(session.AthleteId.ToString(), string.Empty, session.Athlete.Name);
 
-                    var cookieOptions = new CookieOptions()
+                    var cookieOptions1 = new CookieOptions()
                     {
                         IsEssential = true,
-                        SameSite = SameSiteMode.None,
-                        Secure = true
+                        SameSite = SameSiteMode.Strict,
+                        Secure = _appSettings.UseRedirectDuringLogin
                     };
 
-                    HttpContext.Response.Cookies.Append(TokenUtils.TokenName, token, cookieOptions);
+                    HttpContext.Response.Cookies.Append(TokenUtils.TokenName, token, cookieOptions1);
+
+                    if (!_appSettings.UseRedirectDuringLogin)
+                    {
+                        var cookieOptions2 = new CookieOptions()
+                        {
+                            IsEssential = true,
+                            SameSite = SameSiteMode.None,
+                            Secure = true
+                        };
+
+                        HttpContext.Response.Cookies.Append(TokenUtils.TokenName, token, cookieOptions2);                        
+                    }
                 }
                 else
                 {
@@ -200,12 +235,23 @@ namespace LTC2.Webapps.MainApp.Controllers
                 }
 
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                _logger.LogError(e, "Exception while getting session from Strava");
+                
                 return Unauthorized();
             }
 
-            return Redirect(_appEntrypoint + $"?t={DateTime.UtcNow.Ticks}");
+            if (_appSettings.UseRedirectDuringLogin)
+            {
+                return Redirect(_appEntrypoint + $"?t={DateTime.UtcNow.Ticks}");
+            }
+            else
+            {
+                ViewBag.Entrypoint = _appEntrypoint + $"?t={DateTime.UtcNow.Ticks}";
+                
+                return View("CompleteLogin");
+            }
         }
 
     }

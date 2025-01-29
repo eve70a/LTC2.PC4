@@ -4,12 +4,12 @@
     <a href="#" @click="closePopup()" ref="popup-closer" class="ol-popup-closer"></a>
     <div>{{ place }}</div>
   </div>
-  <div ref="mapcontrol" style="bottom: 10px; left: .5em; width: 150px;" class="ol-unselectable ol-control">
-    <button style="width: 130px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickCheckRoute()">{{ buttonCheckRouteText }}</button>
-    <button v-if="isStravaRoute" style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickReloadRoute()">{{ buttonReloadRouteText }}</button>
+  <div ref="mapcontrol" style="bottom: 10px; left: .5em; width: 170px;" class="ol-unselectable ol-control">
+    <button style="width: 150px; margin:10px; margin-bottom: 3px; font-size: 16px;" @click="onclickCheckRoute()">{{ buttonCheckRouteText }}</button>
+    <button v-if="isStravaRoute" style="width: 150px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickReloadRoute()">{{ buttonReloadRouteText }}</button>
     
-    <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
-    <button style="width: 130px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
+    <button style="width: 150px; margin:10px; margin-top: 5px; margin-bottom: 3px; font-size: 16px;" @click="onclickDetails()">{{ buttonText }}</button>
+    <button style="width: 150px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
 
     <div v-if="hasYear">
         <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ bottumYearText }}</a>

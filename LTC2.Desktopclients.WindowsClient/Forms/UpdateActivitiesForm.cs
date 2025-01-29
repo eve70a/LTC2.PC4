@@ -11,14 +11,21 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
         private readonly ILTC2HttpProxy _lTC2HttpProxy;
         private readonly StatusNotifier _statusNotifier;
         private readonly ITranslationService _translationService;
+        private readonly MultiSportManager _multiSportManager;
+        private readonly SelectActivitiesForm _selectActivitiesForm;
 
         private bool _isCalculating;
         private DateTime _startUpdate;
+        private bool _formAdaptedToMultiSport;
+
+        private bool _textDone;
 
         public UpdateActivitiesForm(
             WebviewConnector webviewConnector,
             StatusNotifier statusNotifier,
             ILTC2HttpProxy lTC2HttpProxy,
+            MultiSportManager multiSportManager,
+            SelectActivitiesForm selectActivitiesForm,
             ITranslationService translationService)
         {
             InitializeComponent();
@@ -28,8 +35,8 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
             _lTC2HttpProxy = lTC2HttpProxy;
             _statusNotifier = statusNotifier;
             _translationService = translationService;
-
-            _translationService.LoadMessagesForForm(this);
+            _multiSportManager = multiSportManager;
+            _selectActivitiesForm = selectActivitiesForm;
         }
 
         private void rdoRefresh_CheckedChanged(object sender, EventArgs e)
@@ -56,7 +63,16 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
                     bypassCache = chkByPassCache.Checked;
                 }
 
-                await _lTC2HttpProxy.Update(token, refresh, bypassCache, false, false);
+                if (_multiSportManager.RunInMultiSportMode)
+                {
+                    var types = _multiSportManager.CurrentActivityTypes.Select(x => (int)x).ToList();
+
+                    await _lTC2HttpProxy.UpdateMulti(token, types, refresh, bypassCache, false, false);
+                }
+                else
+                {
+                    await _lTC2HttpProxy.Update(token, refresh, bypassCache, false, false);
+                }
 
                 _isCalculating = true;
                 _startUpdate = DateTime.Now;
@@ -100,6 +116,12 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
         {
             _statusNotifier.OnStatusNotification += OnStatusNotification;
 
+            if (!_textDone)
+            {
+                _translationService.LoadMessagesForForm(this);
+                _textDone = true;
+            }
+
             if (!_isCalculating)
             {
                 chkByPassCache.Checked = false;
@@ -110,7 +132,9 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
 
                 if (token != null)
                 {
-                    var hasIntermediateResult = await _lTC2HttpProxy.HasIntermediateResult(token);
+                    _multiSportManager.AthleteId = await _webviewConnector.GetAthleteIdFromToken();
+
+                    var hasIntermediateResult = await _lTC2HttpProxy.HasIntermediateResult(token, _multiSportManager.RunInMultiSportMode);
 
                     if (hasIntermediateResult)
                     {
@@ -120,14 +144,56 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
                         {
                             MessageBox.Show(_translationService.GetMessage("messagebox.intermediate.process"), _translationService.GetMessage("messagebox.intermediate.process.header"), MessageBoxButtons.OK);
 
-                            await _lTC2HttpProxy.Update(token, false, false, true, false);
+                            if (_multiSportManager.RunInMultiSportMode)
+                            {
+                                await _lTC2HttpProxy.UpdateMulti(token, new List<int>(), false, false, true, false);
+                            }
+                            else
+                            {
+                                await _lTC2HttpProxy.Update(token, false, false, true, false);
+                            }
                         }
                         else
                         {
-                            await _lTC2HttpProxy.Update(token, false, false, false, true);
+                            if (_multiSportManager.RunInMultiSportMode)
+                            {
+                                await _lTC2HttpProxy.UpdateMulti(token, new List<int>(), false, false, false, true);
+                            }
+                            else
+                            {
+                                await _lTC2HttpProxy.Update(token, false, false, false, true);
+                            }
                         }
                     }
                 }
+
+                if (_multiSportManager.RunInMultiSportMode)
+                {
+                    AdaptFormToMultiSport();
+
+                    btnSelectSports.Enabled = true;
+                }
+            }
+
+        }
+
+        public void AdaptFormToMultiSport()
+        {
+            if (!_formAdaptedToMultiSport && _multiSportManager.RunInMultiSportMode)
+            {
+                btnSelectSports.Visible = true;
+                var _userDefaultScreenDPI = 96.0f;
+                using (var g = CreateGraphics())
+                {
+                    var yDPI = g.DpiY;
+                    var dpiScale = yDPI / _userDefaultScreenDPI;
+                    Height += Convert.ToInt32(30.0 * dpiScale);
+                    grpStartUpdate.Height += Convert.ToInt32(35.0 * dpiScale);
+                }
+                
+                _translationService.LoadMessagesForForm(this);
+                
+                _formAdaptedToMultiSport = true;
             }
         }
 
@@ -194,6 +260,13 @@ namespace LTC2.Desktopclients.WindowsClient.Forms
             }
 
             return base.ProcessDialogKey(keyData);
+        }
+
+        private async void btnSelectSports_Click(object sender, EventArgs e)
+        {
+            _multiSportManager.AthleteId = await _webviewConnector.GetAthleteIdFromToken();
+
+            _selectActivitiesForm.ShowDialog();
         }
     }
 }

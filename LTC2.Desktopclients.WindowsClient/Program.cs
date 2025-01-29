@@ -54,6 +54,7 @@ namespace LTC2.Desktopclients.WindowsClient
                 services.AddTransient<MainForm>();
                 services.AddTransient<UpdateActivitiesForm>();
                 services.AddTransient<SelectProfileForm>();
+                services.AddTransient<SelectActivitiesForm>();
 
                 AddConfiguration(services);
 
@@ -61,6 +62,7 @@ namespace LTC2.Desktopclients.WindowsClient
                 services.AddSingleton<StatusNotifier>();
                 services.AddSingleton<WebviewConnector>();
                 services.AddSingleton<ProfileManager>();
+                services.AddSingleton<MultiSportManager>();
 
                 services.AddSingleton<ILTC2HttpProxy, LTC2HttpProxy>();
                 services.AddSingleton<ISecretsVault, WindowsSecretsVault>();

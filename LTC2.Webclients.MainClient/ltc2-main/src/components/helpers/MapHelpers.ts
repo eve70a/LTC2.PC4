@@ -23,6 +23,8 @@ import { ClientSettings } from '../../models/ClientSettings';
 import { IsMobile } from '../../utils/Utils';
 import { Extent } from 'ol/extent';
 
+import { runsInMultiSportMode } from '../../utils/Utils';
+
 export class MapControl extends Control {
     constructor(mapcontrol: HTMLDivElement) {
         if (mapcontrol) {
@@ -109,6 +111,17 @@ export class MapStyleHelper {
             })
         });
 
+      
+        const layerStyleVisitedMulti = new Style({
+            fill: new Fill({
+                color: "rgba(0, 224, 0, 0.6)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
         const layerStyleVisitedYear = new Style({
             fill: new Fill({
                 color: "rgba(204, 51, 0, 0.7)",
@@ -117,7 +130,18 @@ export class MapStyleHelper {
                 color: "rgba(51, 153, 255)",
                 width: 0.5
             })
+        });
+
+        const layerStyleVisitedYearMulti = new Style({
+            fill: new Fill({
+                color: "rgba(0, 100, 0, 0.8)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
         });                
+
 
         const layerStyleLine = new Style({
             stroke: new Stroke({
@@ -129,6 +153,16 @@ export class MapStyleHelper {
         const layerStyleVisitedTrack = new Style({      // visited in active track
             fill: new Fill({
                 color: "rgba(0, 0, 255, 0.15)",          // blue shade (85% transparent) over lower layers
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
+        const layerStyleVisitedTrackMulti = new Style({
+            fill: new Fill({
+                color: "rgba(0, 100, 0, 0.8)",
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -177,6 +211,16 @@ export class MapStyleHelper {
             })
         });
 
+        const layerStyleCheckedPlaceMulti = new Style({
+            fill: new Fill({
+                color: "rgba(0, 100, 0, 0.8)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
         const layerStyleNewCheckedPlace = new Style({
             fill: new Fill({
                 color: "rgba(0, 255, 0, 0.35)",     // bright green: not visited before
@@ -187,9 +231,29 @@ export class MapStyleHelper {
             })
         });
 
+        const layerStyleNewCheckedPlaceMulti = new Style({
+            fill: new Fill({
+                color: "rgba(252, 172, 0, 0.7)",
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
         const layerStyleNewCheckedYearPlace = new Style({
             fill: new Fill({
                 color: "rgba(204, 51, 0, 0.35)",    // dark orange: visited, but not in current year
+            }),
+            stroke: new Stroke({
+                color: "rgba(51, 153, 255)",
+                width: 0.5
+            })
+        });
+
+        const layerStyleNewCheckedYearPlaceMulti = new Style({
+            fill: new Fill({
+                color: "rgba(204, 51, 0, 0.7)",
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -209,6 +273,15 @@ export class MapStyleHelper {
         this._styles[MapStyleHelper.LayerStyleCheckedPlace] = layerStyleCheckedPlace;
         this._styles[MapStyleHelper.LayerStyleNewCheckedPlace] = layerStyleNewCheckedPlace;
         this._styles[MapStyleHelper.LayerStyleNewYearCheckedPlace] = layerStyleNewCheckedYearPlace;
+
+        if (runsInMultiSportMode()) {
+            this._styles[MapStyleHelper.LayerStyleVisited] = layerStyleVisitedMulti;
+            this._styles[MapStyleHelper.LayerStyleVisitedYear] = layerStyleVisitedYearMulti;
+            this._styles[MapStyleHelper.LayerStyleVisitedTrack] = layerStyleVisitedTrackMulti;
+            this._styles[MapStyleHelper.LayerStyleCheckedPlace] = layerStyleCheckedPlaceMulti;
+            this._styles[MapStyleHelper.LayerStyleNewCheckedPlace] = layerStyleNewCheckedPlaceMulti;
+            this._styles[MapStyleHelper.LayerStyleNewYearCheckedPlace] = layerStyleNewCheckedYearPlaceMulti; 
+        } 
     }
 }
 

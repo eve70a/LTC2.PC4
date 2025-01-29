@@ -37,6 +37,7 @@
             btnProfileManager = new Button();
             grpStatus = new GroupBox();
             grpAction = new GroupBox();
+            chkMultiSport = new CheckBox();
             grpStatus.SuspendLayout();
             grpAction.SuspendLayout();
             SuspendLayout();
@@ -44,7 +45,7 @@
             // btnStart
             // 
             btnStart.Enabled = false;
-            btnStart.Location = new Point(177, 77);
+            btnStart.Location = new Point(181, 109);
             btnStart.Name = "btnStart";
             btnStart.Size = new Size(252, 76);
             btnStart.TabIndex = 1;
@@ -113,19 +114,30 @@
             // 
             // grpAction
             // 
+            grpAction.Controls.Add(chkMultiSport);
             grpAction.Controls.Add(btnProfileManager);
             grpAction.Controls.Add(btnStart);
             grpAction.Location = new Point(24, 144);
             grpAction.Name = "grpAction";
-            grpAction.Size = new Size(611, 179);
+            grpAction.Size = new Size(611, 214);
             grpAction.TabIndex = 9;
             grpAction.TabStop = false;
+            // 
+            // chkMultiSport
+            // 
+            chkMultiSport.AutoSize = true;
+            chkMultiSport.Location = new Point(226, 75);
+            chkMultiSport.Name = "chkMultiSport";
+            chkMultiSport.Size = new Size(108, 19);
+            chkMultiSport.TabIndex = 8;
+            chkMultiSport.Text = "#chkMultiSport";
+            chkMultiSport.UseVisualStyleBackColor = true;
             // 
             // SplashScreen
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(656, 346);
+            ClientSize = new Size(656, 386);
             Controls.Add(grpAction);
             Controls.Add(grpStatus);
             FormBorderStyle = FormBorderStyle.FixedSingle;
@@ -140,6 +152,7 @@
             grpStatus.ResumeLayout(false);
             grpStatus.PerformLayout();
             grpAction.ResumeLayout(false);
+            grpAction.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -152,5 +165,6 @@
         private Button btnProfileManager;
         private GroupBox grpStatus;
         private GroupBox grpAction;
+        private CheckBox chkMultiSport;
     }
 }

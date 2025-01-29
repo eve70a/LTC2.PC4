@@ -2,6 +2,7 @@
 using LTC2.Shared.Http.Interfaces;
 using LTC2.Shared.Models.Settings;
 using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
@@ -21,10 +22,23 @@ namespace LTC2.Shared.Http.Proxies
             await ExecutePostRequest(uri, authHeader);
         }
 
-        public async Task<bool> HasIntermediateResult(string accessToken)
+        public async Task UpdateMulti(string accessToken, List<int> types, bool refresh, bool byPassCache, bool isRestore, bool isClear)
+        {
+            var authHeader = new AuthenticationHeaderValue("Bearer", accessToken);
+            var uri = $"/api/Update/updatemulti?refresh={refresh}&bypassCache={byPassCache}&isRestore={isRestore}&isClear={isClear}";
+
+            await ExecutePostRequest<List<int>>(uri, types, authHeader);
+        }
+
+        public async Task<bool> HasIntermediateResult(string accessToken, bool multi)
         {
             var authHeader = new AuthenticationHeaderValue("Bearer", accessToken);
             var uri = $"/api/Profile/intermediateresult";
+
+            if (multi)
+            {
+                uri += $"?multi={multi}";
+            }
 
             var content = await ExecuteGetRequest(uri, authHeader);
 
