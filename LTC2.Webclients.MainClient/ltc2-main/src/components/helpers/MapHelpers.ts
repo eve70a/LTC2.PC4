@@ -320,8 +320,8 @@ export class MapHelper {
 
     private _trackLayer: VectorTileLayer | undefined;
     private _lineTrackLayer: VectorLayer<VectorSource> | undefined;
-    private _routePlacesLayer: VectorTileLayer | undefined;
-    private _routeLineLayer: VectorLayer<VectorSource> | undefined;
+    private _routePlacesLayerList: VectorTileLayer[] = [];
+    private _routeLineLayerList: VectorLayer<VectorSource>[] = [];
 
     private _timelapseLayer: VectorTileLayer | undefined;
     private _linesTimelapseLayer: VectorLayer<VectorSource> | undefined;
@@ -556,12 +556,16 @@ export class MapHelper {
 
     private removeRouteLayers() {
         if (this._showRoute) {
-            if (this._routeLineLayer) {
-                this._map.removeLayer(this._routeLineLayer);
+            if (this._routeLineLayerList) {
+                this._routeLineLayerList.forEach(l => {
+                    this._map.removeLayer(l);
+                })
             }
 
-            if (this._routePlacesLayer) {
-                this._map.removeLayer(this._routePlacesLayer);
+            if (this._routePlacesLayerList) {
+                this._routePlacesLayerList.forEach(l => {
+                    this._map.removeLayer(l);
+                })
             }
 
             this._showRoute = false;
@@ -679,7 +683,8 @@ export class MapHelper {
         if (hasPlacesOnRoutes || hasTracksOnRoutes) {
             this.removeTrackLayers();
             this.removeTimelapseLayers();
-            this.removeRouteLayers();
+            // keep previous checked route
+            // this.removeRouteLayers();
     
             this._currentRoutes = routes;
 
@@ -688,7 +693,7 @@ export class MapHelper {
             const score = this._score;
             const scoreYear = this._scoreYear;
                 
-            this._routePlacesLayer = new VectorTileLayer({
+            const routePlacesLayer = new VectorTileLayer({
                 source: this._vectorTileSource,
                 style: function (feature) {
                     const featurePointer = feature.getProperties()["featurePointer"] as string
@@ -729,18 +734,20 @@ export class MapHelper {
 
             const map = this._map;
 
-            this._routeLineLayer = new VectorLayer({
+            const routeLineLayer = new VectorLayer({
                 source : new VectorSource({
                     features: lineFeatures
                 }),
                 style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine, undefined)
             });
     
-            this._map.addLayer(this._routePlacesLayer);
-            this._map.addLayer(this._routeLineLayer);
+            this._map.addLayer(routePlacesLayer);
+            this._map.addLayer(routeLineLayer);
+            this._routePlacesLayerList.push(routePlacesLayer);
+            this._routeLineLayerList.push(routeLineLayer);
             
             if (doZoom) {
-                const trackExtent = this._routeLineLayer.getSource()?.getFeatures()[0].getGeometry()?.getExtent();
+                const trackExtent = routeLineLayer.getSource()?.getFeatures()[0].getGeometry()?.getExtent();
     
                 if (trackExtent) {
                     const center = this.getCenter(trackExtent);
