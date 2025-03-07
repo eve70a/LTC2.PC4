@@ -338,31 +338,103 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
 
             if (_connection != null)
             {
-                var trackAsWkt = GeometryProducer.Instance.CreateLinestringAsWktString(track);
-                var parameters = new Dictionary<string, object>()
-                {
-                    { "@CurrTrack", trackAsWkt }
-                };
+                // ignore line segments for points that are too far apart
+                // use-case: logging paused, travelling by car
 
-                var mapRecords = GetRecords<DtoMap>(_connection, query, new DtoMapRowMapper(), parameters);
-
-                foreach (var map in mapRecords)
+                var sampleSteps = new List<double>();
+                double step;
+                for(int i=0; i<track.Count; i++)
                 {
-                    var place = new Place()
+                    if (i<=0) {
+                        step = 0.0;
+                    } else {
+                        // track stores long/lat, need lat/long pairs
+                        step = computeDistance( track[i-1][1], track[i-1][0], track[i][1], track[i][0]);
+                    }
+                    // _logger.LogInformation($"Track point {i}: lat = {track[i][1]} deg, long = {track[i][0]} deg, step= {step} meter");
+                    sampleSteps.Add(step);
+                }
+
+                double maxStep = sampleSteps.Max();
+                double totLength = sampleSteps.Sum();
+                _logger.LogInformation($"Track has total length {totLength} m, {track.Count} points, avg.step = {totLength/track.Count}, max.step = {maxStep}");
+
+                // actual route has samples up to order 10s, order 200m, preCheck uses larger step sizes
+                double maxValidSampleStep = Math.Max(1000.0, 10*totLength/track.Count);
+                int iStart = 0;
+                int iEnd = 0;
+                while( iStart < sampleSteps.Count )
+                {
+                    int iLargeStep = sampleSteps.FindIndex(iStart, step => step > maxValidSampleStep);
+                    if (iLargeStep >= 0)
                     {
-                        Id = map.mapFeaturePointer.Split(':')[0],
-                        Name = map.mapName,
-                        FeaturePointer = map.mapFeaturePointer
+                        _logger.LogInformation($"Track point {iLargeStep} has step size {sampleSteps[iLargeStep]} to previous");
+                        iLargeStep = Math.Max(iLargeStep, iStart+2); // need at least two segments
+                        if (iLargeStep >= sampleSteps.Count-2)
+                        {
+                            iEnd = sampleSteps.Count - 1;  // avoid iStart>=Count-1 in next section
+                        } else {
+                            iEnd = iLargeStep;
+                        }
+                    } else {
+                        _logger.LogInformation($"No (more) large step sizes");
+                        iEnd = sampleSteps.Count - 1;
+                    }
+
+                    _logger.LogInformation($"CheckTrack: Processing track slice {iStart}:{iEnd}, {iEnd-iStart} segments");
+                    var trackAsWkt = GeometryProducer.Instance.CreateLinestringAsWktString(track.Slice(iStart, iEnd-iStart));
+                    var parameters = new Dictionary<string, object>()
+                    {
+                        { "@CurrTrack", trackAsWkt }
                     };
 
-                    if (result.FirstOrDefault(p => p.Id == place.Id) == null)
+                    var mapRecords = GetRecords<DtoMap>(_connection, query, new DtoMapRowMapper(), parameters);
+
+                    foreach (var map in mapRecords)
                     {
-                        result.Add(place);
+                        var place = new Place()
+                        {
+                            Id = map.mapFeaturePointer.Split(':')[0],
+                            Name = map.mapName,
+                            FeaturePointer = map.mapFeaturePointer
+                        };
+
+                        if (result.FirstOrDefault(p => p.Id == place.Id) == null)
+                        {
+                            result.Add(place);
+                        }
                     }
+                    iStart = iEnd + 1;
                 }
             }
 
             return result;
+        }
+
+        private double computeDistance( double lat1_deg, double long1_deg, double lat2_deg, double long2_deg) {
+        // Measure the distance in meters between two latitude/longitude coordinates in degrees.
+
+        /*
+            var start_coord = new GeoCoordinate(lat1_deg, long1_deg);
+            var end_coord = new GeoCoordinate(lat2_deg, long2_deg);
+            return start_coord.GetDistanceTo(end_coord);
+        */
+
+            // Earth's radius in meters used in a great circle calculation
+            const double earth_radius_m = 6378000.0;
+            const double deg_per_rad  = 57.29577951308232; // 180/Math.pi
+            double lat1_rad  = lat1_deg  / deg_per_rad;
+            double long1_rad = long1_deg / deg_per_rad;
+            double lat2_rad  = lat2_deg  / deg_per_rad;
+            double long2_rad = long2_deg / deg_per_rad;
+
+            // measure the angle between the two points in radians
+            double angle_rad = Math.Acos(
+                    (Math.Sin(lat1_rad) * Math.Sin(lat2_rad))
+                  + (Math.Cos(lat1_rad) * Math.Cos(lat2_rad) * Math.Cos(long1_rad - long2_rad)) );
+
+            // convert the distance in radians to the distance in meters
+            return earth_radius_m * angle_rad;
         }
 
         private void InitSpatiaLiteMetaData()
