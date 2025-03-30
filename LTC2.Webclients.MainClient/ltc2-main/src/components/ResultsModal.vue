@@ -55,8 +55,8 @@
             </div>
             <!-- Modal footer -->
             <div class="flex items-center p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
-                <button @click="sortOnName(true)" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">{{ buttonOnName }}</button>
-                <button @click="sortOnDate(true)" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">{{ buttonOnDate }}</button>
+                <button @click="selectSortOnName()" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">{{ buttonOnName }}</button>
+                <button @click="selectSortOnDate()" type="button" class="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-blue-300 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600">{{ buttonOnDate }}</button>
             </div>
         </div>
     </div>
@@ -92,6 +92,8 @@ export default defineComponent({
         const inputElement = ref<HTMLInputElement>();
         const sortedVisits = ref(filteredVisits);
         const sortOnNameIndiciator = ref(true);
+        const sortNameAscending = ref(true);
+        const sortDateAscending = ref(false);
         const filter = ref("");
 
         const header = _translationService?.getText("resultsmodal.header");
@@ -131,10 +133,41 @@ export default defineComponent({
             })
         }
 
+        const toggleSortDateAscending = () => {
+            sortDateAscending.value = !sortDateAscending.value;
+        }
+
+        const toggleSortNameAscending = () => {
+            sortNameAscending.value = !sortNameAscending.value;
+        }
+
+        const selectSortOnDate = () => {
+            if (sortOnNameIndiciator.value) {
+                sortOnDate(true);
+            } else {
+                toggleSortDateAscending();
+                sortOnDate(false);
+            }
+        }
+
         const sortOnDate = (scrollReset: boolean) => {
             const visitsToSort = [...filteredVisits];
 
-            sortedVisits.value = visitsToSort.sort((a, b) => { return a.date > b.date ? 1 : -1})
+            sortedVisits.value = visitsToSort.sort((a, b) => {
+                if ( a.date == b.date ) {
+                    if ( sortNameAscending.value ) {
+                        return (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1);
+                    } else {
+                        return (a.name.toLowerCase() < b.name.toLowerCase() ? 1 : -1);
+                    }
+                } else {
+                    if ( sortDateAscending.value ) {
+                        return (a.date > b.date ? 1 : -1);
+                    } else {
+                        return (a.date < b.date ? 1 : -1);
+                    }
+                }
+            });
             sortOnNameIndiciator.value = false;
 
             if (scrollReset) {
@@ -142,8 +175,21 @@ export default defineComponent({
             }
         }
 
+        const selectSortOnName = () => {
+            if (sortOnNameIndiciator.value) {
+                toggleSortNameAscending();
+                sortOnName(false);
+            } else {
+                sortOnName(true);
+            }
+        }
+
         const sortOnName = (scrollReset: boolean) => {
-            sortedVisits.value  = [...filteredVisits].sort((a, b) => { return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1 });
+            if (sortNameAscending.value) {
+                sortedVisits.value  = [...filteredVisits].sort((a, b) => { return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1 });
+            } else {
+                sortedVisits.value  = [...filteredVisits].sort((a, b) => { return a.name.toLowerCase() < b.name.toLowerCase() ? 1 : -1 });
+            }
             sortOnNameIndiciator.value = true;            
 
             if (scrollReset) {
@@ -194,7 +240,7 @@ export default defineComponent({
             }
         }
 
-        return { sortedVisits, showModal, hideModal, sortOnDate, sortOnName, sortOnNameIndiciator, modalElement, header, buttonOnName, buttonOnDate, tableContainer, texthint, keyUp, filter, inputElement, doShowPlaceAndRoute }
+        return { sortedVisits, showModal, hideModal, selectSortOnDate, sortOnDate, selectSortOnName, sortOnName, sortDateAscending, sortNameAscending, sortOnNameIndiciator, modalElement, header, buttonOnName, buttonOnDate, tableContainer, texthint, keyUp, filter, inputElement, doShowPlaceAndRoute }
     }
 })
 
