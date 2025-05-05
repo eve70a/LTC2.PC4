@@ -12,13 +12,13 @@
     <button style="width: 150px; margin:10px; margin-top: 5px; margin-bottom: 5px; font-size: 16px;" @click="onClickTimelapse">{{ buttonTimelapseText }}</button>
 
     <div v-if="hasYear">
-        <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ bottumYearText }}</a>
+        <input type="checkbox" ref="checkBoxYear" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideYear()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideYear()"> {{ buttonYearText }}</a>
     </div>
     <div v-else>
-        <p style="margin-left: 10px;">-- {{ bottumYearText }} </p>
+        <p style="margin-left: 10px;">-- {{ buttonYearText }} </p>
     </div>
     
-    <input type="checkbox" ref="checkBoxLast"  class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ bottumLastText }}</a>
+    <input type="checkbox" ref="checkBoxLast"  class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ buttonLastText }}</a>
     
     <div v-if="hasTrack">
         <input type="checkbox" ref="checkBoxTrack" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"> {{ currentTrackDate }} </a>
@@ -29,7 +29,7 @@
     </div>
 
 
-    <p style="margin-left: 10px; margin-top: 5px; font-size: 12px;">{{ bottumText }}</p>
+    <p style="margin-left: 10px; margin-top: 5px; font-size: 12px;">{{ bottomText }}</p>
   </div>
 </template>
 
@@ -69,13 +69,13 @@ export default defineComponent({
 
         const buttonText = _translationService?.getText("challengemap.buttonText");
         const buttonCheckRouteText = _translationService?.getText("challengemap.buttonCheckRouteText");
-        const bottumText = _translationService?.getText("challengemap.bottumText");
+        const bottomText = _translationService?.getText("challengemap.bottomText");
         const buttonTimelapseText = _translationService?.getText("challengemap.buttonTimelapse");
         const buttonReloadRouteText = _translationService?.getText("challengemap.buttonReloadRouteText");
 
         let mapHelper: MapHelper;
         
-        let bottonYearText: string | undefined;
+        let buttonYearText: string | undefined;
         let buttonLastText: string | undefined;
         let buttonRouteText: string | undefined;
   
@@ -84,10 +84,10 @@ export default defineComponent({
         const scoreLast = _profileService?.getProfile()?.placesInLastRideScore;
         
         const yearTotal = (scoreYear?.length ?? 0).toString();
-        bottonYearText = _translationService?.getTextViaTemplate("challengemap.buttonYearText", [ currentYear.toString(), yearTotal ]);
+        buttonYearText = _translationService?.getTextViaTemplate("challengemap.buttonYearText", [ currentYear.toString(), yearTotal ]);
 
         const lastTotal = (scoreLast?.length ?? 0).toString();
-        buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastTotal ]);
+        buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", ["0", lastTotal ]);
 
         buttonRouteText =  _translationService?.getText("challengemap.buttonRouteText")
 
@@ -268,7 +268,7 @@ export default defineComponent({
             }
         }
 
-        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, checkBoxRoute, onclickDetails, onclickCheckRoute, buttonText, buttonReloadRouteText, buttonCheckRouteText, buttonRouteText, bottumYearText: bottonYearText, buttonTimelapseText, bottumText, bottumLastText: buttonLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, onShowHideRoute, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute, hasRoutes, isStravaRoute, onclickReloadRoute } )
+        return ({ challengeMap, popup, place, closePopup, mapcontrol, checkBoxYear, checkBoxLast, checkBoxTrack, checkBoxRoute, onclickDetails, onclickCheckRoute, buttonText, buttonReloadRouteText, buttonCheckRouteText, buttonRouteText, buttonYearText, buttonTimelapseText, bottomText, buttonLastText, hasYear, onShowHideYear, onShowHideLast, onShowHideTrackForPlace, onShowHideRoute, showTrackForPlace, onClickTimelapse, hasTrack, currentTrackDate, showRoute, hasRoutes, isStravaRoute, onclickReloadRoute } )
     }
 })
 </script>
