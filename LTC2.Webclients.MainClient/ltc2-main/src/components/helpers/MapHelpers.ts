@@ -688,6 +688,22 @@ export class MapHelper {
         return countNew;
     }
 
+    public countNewPlacesCheckedRoute() : number[] {
+        const score = this._score;
+        if (score && this._currentRoutes) {
+            const places = this.getPlaces(this._currentRoutes);  // string[]
+            const routeTotal = places.length;
+
+            let routeNew = routeTotal;
+            places.forEach(id => {
+                if (score.some(v => v.id === id)) { routeNew-- }
+            });
+            return [routeNew, routeTotal];
+        } else {
+            return [0, 0];
+        }
+    }
+
     public showRoute(routes: Routes, doZoom = true) {
         let places = this.getPlaces(routes);
         let hasTracks = false;

@@ -32,7 +32,7 @@
     "challengemap.buttonYearText": "{0} (#{1})",
     "challengemap.buttonLastText": "Laatste rit (#{0}/{1})",
     "challengemap.buttonTimelapse": "Timelapse",
-    "challengemap.buttonRouteText": "Gecheckte route",
+    "challengemap.buttonRouteText": "Gecheckt (#{0}/{1})",
     "challengemap.bottomText": "© 2018-2025 LTC2",
     "selectroutemodal.header" : "Upload een GPX bestand of kies een Strava route:",
     "selectroutemodal.text.hint": "Kies een bestand...",

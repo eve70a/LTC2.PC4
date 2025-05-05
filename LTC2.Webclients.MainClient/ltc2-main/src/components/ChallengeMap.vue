@@ -25,7 +25,7 @@
     </div>
 
     <div v-if="hasRoutes">
-        <input type="checkbox" ref="checkBoxRoute" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideRoute()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideRoute()"> {{ buttonRouteText }} </a>
+        <input type="checkbox" ref="checkBoxRoute" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideRoute()"><a href="#" id="checkBoxRouteLabel" style="vertical-align: middle;position: relative;" @click="onShowHideRoute()"> {{ buttonRouteText }} </a>
     </div>
 
 
@@ -89,7 +89,7 @@ export default defineComponent({
         const lastTotal = (scoreLast?.length ?? 0).toString();
         buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", ["0", lastTotal ]);
 
-        buttonRouteText =  _translationService?.getText("challengemap.buttonRouteText")
+        buttonRouteText = _translationService?.getTextViaTemplate("challengemap.buttonRouteText", ["0", "0" ]);
 
         hasYear.value = scoreYear && scoreYear.length > 0;
 
@@ -182,6 +182,15 @@ export default defineComponent({
             if (checkBoxRoute?.value) {
                 const checkBoxElement = checkBoxRoute.value;
                 checkBoxElement.checked = which == 4 ? mapHelper.getShowRoute() : false;
+            
+                const routeLabel = document.getElementById("checkBoxRouteLabel");
+                if (routeLabel) {
+                    const [routeNew, routeTotal] = mapHelper.countNewPlacesCheckedRoute();
+                    buttonRouteText = _translationService?.getTextViaTemplate("challengemap.buttonRouteText", [routeNew.toString(), routeTotal.toString()]);
+                    if (buttonRouteText) {
+                        routeLabel.textContent = buttonRouteText;
+                    }
+                }
             }
         }
 
