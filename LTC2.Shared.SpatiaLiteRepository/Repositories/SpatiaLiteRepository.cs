@@ -377,7 +377,7 @@ namespace LTC2.Shared.SpatiaLiteRepository.Repositories
                             iEnd = iLargeStep;
                         }
                     } else {
-                        _logger.LogInformation($"No (more) large step sizes");
+                        // _logger.LogInformation($"No (more) large step sizes");
                         iEnd = sampleSteps.Count - 1;
                     }
 
