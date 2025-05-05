@@ -18,7 +18,7 @@
         <p style="margin-left: 10px;">-- {{ buttonYearText }} </p>
     </div>
     
-    <input type="checkbox" ref="checkBoxLast"  class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ buttonLastText }}</a>
+    <input type="checkbox" ref="checkBoxLast"  class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideLast()"><a href="#" id="checkBoxLastLabel" style="vertical-align: middle;position: relative;" @click="onShowHideLast()"> {{ buttonLastText }}</a>
     
     <div v-if="hasTrack">
         <input type="checkbox" ref="checkBoxTrack" class="focus:ring-0 focus:ring-offset-0 focus:shadow-none" style="margin-left: 10px; margin-right: 2px; vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"><a href="#" style="vertical-align: middle;position: relative;" @click="onShowHideTrackForPlace()"> {{ currentTrackDate }} </a>
@@ -97,10 +97,13 @@ export default defineComponent({
             const coordinates =  _profileService?.getProfile()?.trackLastRide ?? []; 
 
             mapHelper = new MapHelper(challengeMap.value, popup.value, mapcontrol.value, score, scoreYear, scoreLast, coordinates, place, _clientSettings);            
-
-            if (scoreLast) {
+            const lastLabel = document.getElementById("checkBoxLastLabel");
+            if (lastLabel && scoreLast) {
                 const lastNew = mapHelper.countNewPlaces(scoreLast);
                 buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastNew.toString(), lastTotal ]);
+                if (buttonLastText) {
+                    lastLabel.textContent = buttonLastText;
+                }
             }
         })
     
