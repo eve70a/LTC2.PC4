@@ -97,6 +97,11 @@ export default defineComponent({
             const coordinates =  _profileService?.getProfile()?.trackLastRide ?? []; 
 
             mapHelper = new MapHelper(challengeMap.value, popup.value, mapcontrol.value, score, scoreYear, scoreLast, coordinates, place, _clientSettings);            
+
+            if (scoreLast) {
+                const lastNew = mapHelper.countNewPlaces(scoreLast);
+                buttonLastText = _translationService?.getTextViaTemplate("challengemap.buttonLastText", [lastNew.toString(), lastTotal ]);
+            }
         })
     
         const closePopup = () => {

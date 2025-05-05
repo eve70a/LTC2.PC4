@@ -667,6 +667,27 @@ export class MapHelper {
         return this.getPlaces(routes).length > 0;
     }
 
+    public countNewPlaces(places: Visit[]) : number {
+        let countNew = 0;
+        const score = this._score;
+
+        if (score && places.length>0) {
+            places.forEach(p => {
+                const i = score.findIndex(s => s.id === p.id );
+                if (i >= 0) {
+                    const date_1st = score[i].date.split(" ")[0];
+                    const date_cur = p.date.split(" ")[0];
+                    if (date_1st < date_cur) {
+                                        // visited before
+                    } else {
+                        countNew++;     // first visit this ride
+                    }
+                }
+            });
+        }
+        return countNew;
+    }
+
     public showRoute(routes: Routes, doZoom = true) {
         let places = this.getPlaces(routes);
         let hasTracks = false;
