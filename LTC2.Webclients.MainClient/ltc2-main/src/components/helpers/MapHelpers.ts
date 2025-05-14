@@ -96,7 +96,9 @@ export class MapStyleHelper {
                 color: "rgba(51, 153, 255, 0.2)",
             }),
             stroke: new Stroke({
-                color: "rgba(51, 153, 255)",
+                // color: "rgba(51, 153, 255)", // pale blue
+                // color: "rgba(235, 64, 52)", // bright red
+                color: "rgba(32, 128, 10)", // medium-dark green
                 width: 1.0              // thick lines for non-visited places
             })
         });
@@ -107,7 +109,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -118,7 +120,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -128,7 +130,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -138,7 +140,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });                
 
@@ -207,7 +209,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -217,7 +219,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -227,7 +229,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -237,7 +239,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -247,7 +249,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
@@ -257,7 +259,7 @@ export class MapStyleHelper {
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
-                width: 0.5
+                width: 0.2
             })
         });
 
