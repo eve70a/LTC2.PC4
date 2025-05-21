@@ -174,7 +174,7 @@ export class MapStyleHelper {
 
         const layerStyleSelectedPlace = new Style({
             fill: new Fill({
-                color: "rgba(0, 150, 255, 0.7)",
+                color: "rgba(70, 170, 35, 0.7)",     // medium-dark green: visited first in selected track
             }),
             stroke: new Stroke({
                 color: "rgba(51, 153, 255)",
@@ -592,6 +592,7 @@ export class MapHelper {
     }
 
     public showTrackForSelectedPlace(placeId: string, track: Track, doZoom = true) {
+        const score = this._score;
         this.removeTrackLayers();
         this.removeTimelapseLayers();
         this.removeRouteLayers();
@@ -604,20 +605,36 @@ export class MapHelper {
         const mapStyleHelper = this._mapStyleHelper;
         const map = this._map;
 
+        // get date of plotted track, date when place was visited
+        let i = -1;
+        let date_cur = "";
+        if (score && score.some(s => s.id === placeId)){  // score has an element with id placeId?
+            i = score.findIndex(s => s.id === placeId );
+            date_cur = score[i].date.split(" ")[0];
+        }
+
         this._trackLayer = new VectorTileLayer({
             source: this._vectorTileSource,
             style: function (feature) {
                 const featurePointer = feature.getProperties()["featurePointer"] as string
                 const id = featurePointer.split(":")[0];
 
+                let j = -1;
+                let date_place = "";
+                if (score && score.some(s => s.id === id)){  // score has an element with place id?
+                    j = score.findIndex(s => s.id === id );
+                    date_place = score[j].date.split(" ")[0];
+                }
+
                 if (currentTrack && currentTrack.places && currentTrack.places.some(s => s === id)){
                     if (currentPlace && currentPlace === id) {
                         return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleSelectedPlace, map);
+                    } else if (i >=0 && j >= 0 && date_place < date_cur) {
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedYear, map);     // visited before
                     } else {
-                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleVisitedTrack, map);
+                        return mapStyleHelper.getStyle(MapStyleHelper.LayerStyleNewCheckedPlace, map); // first visit on plotted track
                     }
                 }
-
                 return new Style();
             }
         });
