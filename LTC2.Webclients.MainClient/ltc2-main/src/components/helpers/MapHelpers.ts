@@ -707,6 +707,28 @@ export class MapHelper {
         return countNew;
     }
 
+    public countNewPlacesOnTrack(track: Track) : number[] {
+        let countNew = 0;
+        const score = this._score;
+        if (score && track.places.length>0) {
+            const date_cur = track.visitedOn.split("T")[0];     // format 2025-05-21T03:59:42
+            track.places.forEach(p => {
+                const i = score.findIndex(s => s.id === p );
+                if (i >= 0) {
+                    const date_1st = score[i].date.split(" ")[0];
+                    if (date_1st < date_cur) {
+                                        // visited before
+                    } else {
+                        countNew++;     // first visit this ride
+                    }
+                }
+            });
+            return [countNew, track.places.length];
+        } else {
+            return [0, 0];
+        }
+    }
+
     public countNewPlacesCheckedRoute() : number[] {
         const score = this._score;
         if (score && this._currentRoutes) {
