@@ -40,7 +40,7 @@ import { Track } from '../models/Track';
 import { Routes } from '../models/Routes';
 
 import { MapHelper } from './helpers/MapHelpers';
-import { fromatDateAsYYYYDDMM } from '../utils/Utils';
+import { formatDateAsYYYYDDMM } from '../utils/Utils';
 
 export default defineComponent({
 
@@ -252,7 +252,7 @@ export default defineComponent({
 
             hasTrack.value = mapHelper.getShowTrackForSelectedPlace();
             const currTrack = mapHelper.getCurrentTrack();
-            currentTrackDate.value = fromatDateAsYYYYDDMM(currTrack?.visitedOn ?? "");
+            currentTrackDate.value = formatDateAsYYYYDDMM(currTrack?.visitedOn ?? "");
 
             nextTick(() => {
                 doCheckBoxes(3);

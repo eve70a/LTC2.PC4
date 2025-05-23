@@ -23,7 +23,7 @@ export function IsMobile(): boolean {
     return mobile;
 }
 
-export function fromatDateAsYYYYDDMM(date: string): string {
+export function formatDateAsYYYYDDMM(date: string): string {
     const nd = date === "" ? new Date() : new Date(date);
 
     return nd.getFullYear() + '-' + leftpad(nd.getMonth() + 1, 2) + '-' + leftpad(nd.getDate(), 2);

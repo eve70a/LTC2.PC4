@@ -30,7 +30,7 @@
             <div class="relative overflow-x-auto">
                 <div ref="tableContainer" class="p-2 space-y-2 overflow-y-scroll overflow-x-clip mb-4" style="height: 330px;">
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <tbody v-if="sortOnNameIndiciator">
+                        <tbody v-if="sortOnNameIndicator">
                             <tr v-for="visit in sortedVisits" :key="visit.id" @click="doShowPlaceAndRoute(visit.id)" class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 cursor-pointer">
                                 <th scope="row" class="px-2 py-2 font-medium text-gray-900 whitespace-nowrap dark:text-white" >
                                    {{ visit.name }}
@@ -91,7 +91,7 @@ export default defineComponent({
         const tableContainer = ref<HTMLDivElement>();
         const inputElement = ref<HTMLInputElement>();
         const sortedVisits = ref(filteredVisits);
-        const sortOnNameIndiciator = ref(true);
+        const sortOnNameIndicator = ref(true);
         const sortNameAscending = ref(true);
         const sortDateAscending = ref(false);
         const filter = ref("");
@@ -142,7 +142,7 @@ export default defineComponent({
         }
 
         const selectSortOnDate = () => {
-            if (sortOnNameIndiciator.value) {
+            if (sortOnNameIndicator.value) {
                 sortOnDate(true);
             } else {
                 toggleSortDateAscending();
@@ -168,7 +168,7 @@ export default defineComponent({
                     }
                 }
             });
-            sortOnNameIndiciator.value = false;
+            sortOnNameIndicator.value = false;
 
             if (scrollReset) {
                 toTop();
@@ -176,7 +176,7 @@ export default defineComponent({
         }
 
         const selectSortOnName = () => {
-            if (sortOnNameIndiciator.value) {
+            if (sortOnNameIndicator.value) {
                 toggleSortNameAscending();
                 sortOnName(false);
             } else {
@@ -190,7 +190,7 @@ export default defineComponent({
             } else {
                 sortedVisits.value  = [...filteredVisits].sort((a, b) => { return a.name.toLowerCase() < b.name.toLowerCase() ? 1 : -1 });
             }
-            sortOnNameIndiciator.value = true;            
+            sortOnNameIndicator.value = true;
 
             if (scrollReset) {
                 toTop();
@@ -208,7 +208,7 @@ export default defineComponent({
                 filteredVisits = [...props.visits]
             }
 
-            if (sortOnNameIndiciator.value) {
+            if (sortOnNameIndicator.value) {
                 sortOnName(false);
             } else {
                 sortOnDate(false);
@@ -240,7 +240,7 @@ export default defineComponent({
             }
         }
 
-        return { sortedVisits, showModal, hideModal, selectSortOnDate, sortOnDate, selectSortOnName, sortOnName, sortDateAscending, sortNameAscending, sortOnNameIndiciator, modalElement, header, buttonOnName, buttonOnDate, tableContainer, texthint, keyUp, filter, inputElement, doShowPlaceAndRoute }
+        return { sortedVisits, showModal, hideModal, selectSortOnDate, sortOnDate, selectSortOnName, sortOnName, sortDateAscending, sortNameAscending, sortOnNameIndicator, modalElement, header, buttonOnName, buttonOnDate, tableContainer, texthint, keyUp, filter, inputElement, doShowPlaceAndRoute }
     }
 })
 
