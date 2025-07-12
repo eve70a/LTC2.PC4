@@ -1,5 +1,5 @@
 <template>
-  <div class="mh-none">  
+  <div class="mh-none">
     <div class="flex h-screen w-full">
       <div class="m-auto">
         <h3 v-if="ismobile">{{ createHSpaceMessageMobile }}</h3>
@@ -8,29 +8,34 @@
     </div>
   </div>
 
-  <div class="mw-none">  
+  <div class="mw-none">
     <div class="flex h-screen w-full">
       <div class="m-auto">
         <h3>{{ createWSpaceMessage }}</h3>
       </div>
     </div>
   </div>
-  
+
   <div class="mh-visible">
     <div class="flex flex-col h-screen max-h-screen">
-      <div class="flex justify-center relative px-4 pt-6 pb-8">
-        <div class="w-full max-w-screen-sm">          
-          <div class="text-black text-center text-3xl pb-2">Hi {{ name }}</div>
+      <div class="flex justify-center relative p-2">
 
-          <div v-if="hasError" class="p-4 text-sm text-center text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+        <div class="w-1/4 max-w-screen-sm">
+          <div class="p-4 text-1xl text-right text-black font-medium">Hi {{ name }}</div>
+        </div>
+
+        <div class="w-1/4 max-w-screen-sm">
+          <div v-if="hasError" class="p-4 text-1xl text-center text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
             <span class="font-medium">{{ errorMessage }}</span>
           </div>
-          <div v-else class="p-4 text-sm text-center text-gray-800 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300" role="alert">
+          <div v-else class="p-4 text-1xl text-center text-gray-800 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300" role="alert">
             <span v-if="profileComplete || isStandalone" class="font-medium">{{ completeMessage }}</span>
             <span v-else class="font-medium">{{ notCompleteMessage }}</span>
           </div>
+        </div>
 
-          <div class="flex justify-center pt-2 space-x-2">
+        <div class="w-1/2 max-w-screen-sm">
+          <div class="flex justify-left pt-2 space-x-2">
             <button @click="onShowResultClick()" class="block text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" type="button">
               {{ buttonText }}
             </button>
@@ -73,14 +78,14 @@ import RouteSelectionModal from './components/RouteSelectionModal.vue';
 
 export default {
   components: { ChallengeMap, ResultsModal, ProfileModal, SpinnerModal, RouteSelectionModal },
-  
+
   setup() {
     const _profileService = inject(AppTypes.IProfileServiceKey);
     const _mapService = inject(AppTypes.IMapServiceKey);
     const _translationService = inject(AppTypes.ITranslationServiceKey);
 
     const profileVisits = _profileService ? _profileService?.getVisits() : new Array<Visit>();
-    
+
     const profile = _profileService?.getProfile();
     const visits = ref<Visit[]>(profileVisits);
 
@@ -115,7 +120,7 @@ export default {
     const routeSelectionModal = ref<typeof RouteSelectionModal>();
 
     let spinnerActive = false;
-    
+
     let scriptTag = document.createElement("script");
     scriptTag.setAttribute("type", "text/javascript");
     scriptTag.setAttribute("src", "./services/Library.js");
@@ -179,7 +184,7 @@ export default {
           if (limitsError.Limits) {
             daylimitsexceeded = limitsError.Limits.dayRateUsage >= limitsError.Limits.dayRateLimit;
           }
-          
+
           if (daylimitsexceeded) {
             errorMessage.value = errorDayLimitsMessage.value;
           } else {
@@ -188,7 +193,7 @@ export default {
 
           setTimeout( () => {
             errorMessage.value = saveMessage;
-            
+
             hasError.value = false
           }, 4000);
 
@@ -199,7 +204,7 @@ export default {
         }
       }
     }
-    
+
     return { name, profileComplete, notCompleteMessage, completeMessage, visits, onError, onShowResultClick, onRouteSelectionRequested, onShowProfileClick, onProfileUpdated, resultsModal, routeSelectionModal, profileModal, buttonText, buttonProfileText, buttonProfileTextAlt, createHSpaceMessage, createHSpaceMessageMobile, createWSpaceMessage, ismobile, hasError, errorMessage, onTrackForPlaceRequested, challengeMap, spinnerModal, onSpinnerRequested, isStandalone, onRoutesRequested }
   }
 }
