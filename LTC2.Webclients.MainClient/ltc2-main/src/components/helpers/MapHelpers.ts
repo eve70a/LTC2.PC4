@@ -50,8 +50,11 @@ export class MapStyleHelper {
     public static LayerStyleCheckedPlace = 9;
     public static LayerStyleNewCheckedPlace = 10;
     public static LayerStyleNewYearCheckedPlace = 11;
+    public static LayerStyleTrackLine1 = 12;
+    public static LayerStyleTrackLine2 = 13;
 
     private _styles : Style[] = [];
+    private currentLineStyle = 1;
 
     constructor() {
         this.initStyles();
@@ -189,6 +192,21 @@ export class MapStyleHelper {
             })
         });    
         
+        const layerStyleTrackLine1 = new Style({
+            stroke: new Stroke({
+                color: "rgba(40, 47, 252)",     // blue
+                width: 2
+            })
+        });    
+        
+        const layerStyleTrackLine2 = new Style({
+            stroke: new Stroke({
+                color: "rgba(153, 0, 76)",   // pink
+                width: 3,
+                lineDash: [2, 6]       //dash, gap
+            })
+        });    
+        
         const layerStyleTimelapseLine = new Style({
             stroke: new Stroke({
                 color: "rgba(40, 47, 252)",
@@ -270,6 +288,8 @@ export class MapStyleHelper {
         this._styles[MapStyleHelper.LayerStyleVisitedTrack] = layerStyleVisitedTrack;
         this._styles[MapStyleHelper.LayerStyleSelectedPlace] = layerStyleSelectedPlace;
         this._styles[MapStyleHelper.LayerStyleTrackLine] = layerStyleTrackLine;
+        this._styles[MapStyleHelper.LayerStyleTrackLine1] = layerStyleTrackLine1;
+        this._styles[MapStyleHelper.LayerStyleTrackLine2] = layerStyleTrackLine2;
         this._styles[MapStyleHelper.LayerStyleTimelapseLine] = layerStyleTimelapseLine;
         this._styles[MapStyleHelper.LayerStyleTimelapseLineLast] = layerStyleTimelapseLineLast;
         this._styles[MapStyleHelper.LayerStyleCheckedPlace] = layerStyleCheckedPlace;
@@ -284,6 +304,16 @@ export class MapStyleHelper {
             this._styles[MapStyleHelper.LayerStyleNewCheckedPlace] = layerStyleNewCheckedPlaceMulti;
             this._styles[MapStyleHelper.LayerStyleNewYearCheckedPlace] = layerStyleNewCheckedYearPlaceMulti; 
         } 
+    }
+
+    public rotateLineStyle() {
+        if (this.currentLineStyle === 1) {
+            this.currentLineStyle = 2;
+            this._styles[MapStyleHelper.LayerStyleTrackLine] = this._styles[MapStyleHelper.LayerStyleTrackLine2];
+        } else {
+            this.currentLineStyle = 1;
+            this._styles[MapStyleHelper.LayerStyleTrackLine] = this._styles[MapStyleHelper.LayerStyleTrackLine1];
+        }
     }
 }
 
@@ -818,6 +848,7 @@ export class MapHelper {
                 }),
                 style: mapStyleHelper.getStyle(MapStyleHelper.LayerStyleTrackLine, undefined)
             });
+            this._mapStyleHelper.rotateLineStyle();       // use next color for next checked route
     
             this._map.addLayer(routePlacesLayer);
             this._map.addLayer(routeLineLayer);
